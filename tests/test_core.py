@@ -37,6 +37,11 @@ def banner(s):
 def test_helpers():
     assert valid_inn("7707083893") and valid_inn("500100732259")
     assert valid_ogrn("1027700132195")
+    assert not valid_ogrn("1187746123456")
+
+    ogrn_ctx = detect_structured("ОГРН 1187746123456")
+    assert any(e.type == "OGRN" and e.text == "1187746123456" for e in ogrn_ctx)
+
     assert valid_snils("112-233-445 95")
 
     kpp = detect_structured("Организация, КПП 7701AB001, далее по тексту.")
@@ -60,6 +65,12 @@ def test_helpers():
     assert "г Москва" in addr_texts
     assert "городе Москве" in addr_texts
     assert "гор. Москвы" in addr_texts
+
+    prospect = detect_structured("проживает по адресу: Невский пр-т, д. 28, кв. 7.")
+    assert any(
+        e.type == "ADDR" and "Невский пр-т" in e.text and "д. 28" in e.text
+        for e in prospect
+    )
 
     a = [Entity("FIO", 0, 21, "Иванов Иван Петрович", "иванов|и")]
     b = [Entity("FIO", 0, 6, "Иванов", "иванов")]

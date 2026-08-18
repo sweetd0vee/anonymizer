@@ -245,6 +245,10 @@ def render_category_types():
         st.session_state.editor_rev += 1
 
 
+def page_bottom_spacer() -> None:
+    st.markdown('<div class="page-bottom-spacer" aria-hidden="true"></div>', unsafe_allow_html=True)
+
+
 def render_highlight_legend() -> None:
     """Список категорий подсветки под выбором категорий."""
     legend = "".join(
@@ -295,6 +299,7 @@ def page_anonymize():
     files: list[FileState] = st.session_state.files
     if not files:
         st.info("Выберите файл или несколько файлов и нажмите «Обработать».")
+        page_bottom_spacer()
         return
 
     errors = [fs for fs in files if fs.error]
@@ -321,6 +326,7 @@ def page_anonymize():
         st.error(f"{fs.name}: {fs.error}")
 
     if not ok_files:
+        page_bottom_spacer()
         return
 
     names = [fs.name for fs in files]
@@ -359,28 +365,45 @@ def page_anonymize():
             "Тег": tag,
             "Тип": ENTITY_TYPES.get(e0.type, e0.type),
             "Значение": e0.text[:80],
-            "×": len(ents),
+            "Количество": len(ents),
         })
     if not rows:
         st.info("Ничего не найдено. Добавьте фрагмент вручную, если нужно.")
     else:
-        edited = st.data_editor(
-            rows,
-            key=f"ents_{st.session_state.editor_rev}",
-            hide_index=True,
-            width="stretch",
-            disabled=["Тег", "Тип", "Значение", "×"],
-            column_config={
-                "Заменить": st.column_config.CheckboxColumn(width="small"),
-                "×": st.column_config.NumberColumn(width="small"),
-            },
+        search = st.text_input(
+            "Поиск по значению",
+            placeholder="Например: Сбербанк",
+            key="entity_value_search",
         )
-        records = edited.to_dict("records") if hasattr(edited, "to_dict") else edited
-        for row in records:
-            tag = row["Тег"]
-            want = bool(row["Заменить"])
-            if groups.get(tag) and groups[tag][0].enabled != want:
-                set_tag_enabled(tag, want)
+        query = search.strip().lower()
+        display_rows = (
+            [r for r in rows if query in r["Значение"].lower()]
+            if query else rows
+        )
+        if query and not display_rows:
+            st.info("По вашему запросу ничего не найдено.")
+        else:
+            if query:
+                st.caption(f"Показано {len(display_rows)} из {len(rows)}")
+            edited = st.data_editor(
+                display_rows,
+                key=f"ents_{st.session_state.editor_rev}",
+                hide_index=True,
+                width="stretch",
+                disabled=["Тег", "Тип", "Значение", "Количество"],
+                column_config={
+                    "Заменить": st.column_config.CheckboxColumn(width="small"),
+                    "Количество": st.column_config.NumberColumn(
+                        "Количество", width="small"
+                    ),
+                },
+            )
+            records = edited.to_dict("records") if hasattr(edited, "to_dict") else edited
+            for row in records:
+                tag = row["Тег"]
+                want = bool(row["Заменить"])
+                if groups.get(tag) and groups[tag][0].enabled != want:
+                    set_tag_enabled(tag, want)
 
     st.markdown("**Пропущенное**")
     labels = [label for _, label in MANUAL_TYPES]
@@ -397,8 +420,7 @@ def page_anonymize():
         index=0,
         label_visibility="collapsed",
     )
-    m3.markdown("<div style='height: 1.55rem;'></div>", unsafe_allow_html=True)
-    if m3.button("Добавить", width="stretch"):
+    if m3.button("Добавить", type="primary", width="stretch"):
         etype = MANUAL_TYPES[labels.index(chosen)][0]
         n, reason = add_manual(fragment, etype)
         if n:
@@ -417,37 +439,15 @@ def page_anonymize():
 
     st.markdown("---")
     st.subheader("Скачать")
-    d1, d2, d3 = st.columns(3)
-    if len(ok_files) == 1:
-        name, data = export_file(ok_files[0])
-        d1.download_button(
-            f"Обезличенный файл ({name})",
-            data=data,
-            file_name=name,
-            mime=mime_for(name),
-            type="primary",
-            width="stretch",
-        )
-    else:
-        d1.download_button(
-            "Все файлы + таблица (ZIP)",
-            data=export_zip(),
-            file_name="anonymized.zip",
-            mime=MIME[".zip"],
-            type="primary",
-            width="stretch",
-        )
-    d2.download_button(
-        "Таблица соответствий",
-        data=mapping_json(),
-        file_name="_mapping.json" if len(ok_files) > 1 else (
-            os.path.splitext(ok_files[0].name)[0] + ".mapping.json"
-        ),
-        mime=MIME[".json"],
-        width="stretch",
+    st.download_button(
+        "Скачать архив (обезличенный файл + таблица соответствий)",
+        data=export_zip(),
+        file_name="anonymized.zip",
+        mime=MIME[".zip"],
+        type="primary",
     )
-    if len(ok_files) > 1:
-        d3.caption("В ZIP уже есть `_mapping.json`.")
+    page_bottom_spacer()
+
 
 def page_restore():
     st.markdown(
@@ -486,6 +486,7 @@ def page_restore():
 
     if not st.session_state.restore_text:
         st.info("Укажите оба файла и нажмите «Восстановить».")
+        page_bottom_spacer()
         return
 
     if st.session_state.restore_leftover:
@@ -504,6 +505,7 @@ def page_restore():
         mime=mime_for(out_name),
         type="primary",
     )
+    page_bottom_spacer()
 
 
 def inject_theme():

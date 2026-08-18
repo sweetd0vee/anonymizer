@@ -13,6 +13,7 @@
   --sokol-text: #1B2430;
   --sokol-tab-idle: #E8ECF0;
   --layout-top: 2.85rem;
+  --layout-bottom: 6rem;
   --control-height: 34px;
   --control-radius: 5px;
   --control-font: 0.8125rem;
@@ -61,15 +62,26 @@ section[data-testid="stSidebar"] > div:first-child,
   background: var(--sokol-card);
   border: 1px solid var(--sokol-line);
   border-radius: 10px;
-  padding: 1.25rem 36px 40px !important;
+  padding: 1.25rem 36px var(--layout-bottom) !important;
   margin-top: 0 !important;
-  min-height: 100vh;
+  margin-bottom: var(--layout-bottom) !important;
   box-shadow: none;
 }
 
-[data-testid="stMain"] {
-  padding-top: 0 !important;
-  margin-top: 0 !important;
+[data-testid="stMain"],
+[data-testid="stAppViewContainer"],
+[data-testid="stAppViewBlockContainer"],
+div[data-testid="stTabs"] [data-testid="stTabPanel"] {
+  padding-bottom: var(--layout-bottom) !important;
+}
+
+.page-bottom-spacer {
+  display: block;
+  height: var(--layout-bottom);
+  min-height: var(--layout-bottom);
+  width: 100%;
+  flex-shrink: 0;
+  pointer-events: none;
 }
 
 /* Заголовок страницы — темно-синий */
@@ -132,19 +144,29 @@ div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] {
 }
 
 /* Кнопки — компактные и той же высоты, что у вкладок */
+[data-testid="stDownloadButton"],
+.stDownloadButton {
+  width: fit-content !important;
+  max-width: 100%;
+}
+
 .stButton > button,
 .stDownloadButton > button,
+[data-testid="stDownloadButton"] button,
 [data-testid="stBaseButton-secondary"],
 [data-testid="baseButton-secondary"],
 [data-testid="stBaseButton-primary"],
 [data-testid="baseButton-primary"] {
+  width: auto !important;
   padding: 0 var(--control-pad-x) !important;
   min-height: var(--control-height) !important;
   height: var(--control-height) !important;
+  max-height: var(--control-height) !important;
   line-height: 1 !important;
   font-size: var(--control-font) !important;
   font-weight: 600 !important;
   border-radius: var(--control-radius) !important;
+  white-space: nowrap;
 }
 
 /* Кнопки: вторичные — контур, primary — стальной синий (не красный) */
@@ -167,17 +189,17 @@ div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] {
 .stDownloadButton > button[kind="primary"],
 [data-testid="stBaseButton-primary"],
 [data-testid="baseButton-primary"] {
-  background: var(--sokol-steel) !important;
+  background: var(--sokol-navy) !important;
   color: #fff !important;
-  border: 1px solid var(--sokol-steel) !important;
+  border: 1px solid var(--sokol-navy) !important;
 }
 
 .stButton > button[kind="primary"]:hover,
 .stDownloadButton > button[kind="primary"]:hover,
 [data-testid="stBaseButton-primary"]:hover,
 [data-testid="baseButton-primary"]:hover {
-  background: var(--sokol-steel-hover) !important;
-  border-color: var(--sokol-steel-hover) !important;
+  background: var(--sokol-navy-hover) !important;
+  border-color: var(--sokol-navy-hover) !important;
   color: #fff !important;
 }
 
