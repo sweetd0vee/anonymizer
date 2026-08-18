@@ -17,11 +17,12 @@ MIME = {
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ".pdf": "application/pdf",
     ".txt": "text/plain",
+    ".csv": "text/csv",
     ".json": "application/json",
     ".zip": "application/zip",
 }
 
 AVAILABLE_TYPES = {code for code, _ in SETTING_TYPES}
-DOWNLOAD_FORMATS = ["PDF", "DOCX", "TXT"]
-FORMAT_EXT = {"PDF": ".pdf", "DOCX": ".docx", "TXT": ".txt"}
-EXT_FORMAT = {".pdf": "PDF", ".docx": "DOCX", ".txt": "TXT"}
+DOWNLOAD_FORMATS = ["PDF", "DOCX", "TXT", "CSV"]
+FORMAT_EXT = {"PDF": ".pdf", "DOCX": ".docx", "TXT": ".txt", "CSV": ".csv"}
+EXT_FORMAT = {".pdf": "PDF", ".docx": "DOCX", ".txt": "TXT", ".csv": "CSV"}

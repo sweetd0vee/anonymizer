@@ -84,7 +84,30 @@ div[data-testid="stTabs"] [data-testid="stTabPanel"] {
   pointer-events: none;
 }
 
-/* Заголовок страницы — темно-синий */
+/* Заголовок страницы — иконка анонима + темно-синий текст */
+.app-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 0.35rem;
+}
+
+.app-title img {
+  width: 40px;
+  height: 40px;
+  display: block;
+  flex-shrink: 0;
+}
+
+.app-title h1 {
+  color: var(--sokol-navy) !important;
+  font-size: 1.5rem !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.2 !important;
+}
+
 [data-testid="stHeading"],
 [data-testid="stHeading"] h1,
 [data-testid="stHeading"] h2,
@@ -108,8 +131,11 @@ section[data-testid="stSidebar"] h3 {
   color: var(--sokol-muted) !important;
 }
 
-/* Вкладки как сегменты: активная — navy, остальные — серые */
-div[data-testid="stTabs"] [data-baseweb="tab-list"] {
+/* Вкладки как сегменты: активная — navy, остальные — серые.
+   Streamlit 1.59+ ушёл с BaseWeb на react-aria (stTab / data-selected). */
+div[data-testid="stTabs"] [data-baseweb="tab-list"],
+div[data-testid="stTabs"] [role="tablist"],
+div[data-testid="stTabs"] .react-aria-TabList {
   gap: 6px;
   background: transparent !important;
   border-bottom: none !important;
@@ -117,12 +143,20 @@ div[data-testid="stTabs"] [data-baseweb="tab-list"] {
   display: flex !important;
 }
 
-div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
-div[data-testid="stTabs"] [data-baseweb="tab-border"] {
+div[data-testid="stTabs"] [role="tablist"]::after,
+div[data-testid="stTabs"] .react-aria-TabList::after {
   display: none !important;
 }
 
-div[data-testid="stTabs"] button[data-baseweb="tab"] {
+div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
+div[data-testid="stTabs"] [data-baseweb="tab-border"],
+div[data-testid="stTabs"] .react-aria-SelectionIndicator {
+  display: none !important;
+}
+
+div[data-testid="stTabs"] button[data-baseweb="tab"],
+div[data-testid="stTabs"] [data-testid="stTab"],
+div[data-testid="stTabs"] [role="tab"] {
   flex: 0 0 auto !important;
   background: var(--sokol-tab-idle) !important;
   color: var(--sokol-text) !important;
@@ -138,9 +172,27 @@ div[data-testid="stTabs"] button[data-baseweb="tab"] {
   white-space: nowrap !important;
 }
 
-div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] {
+div[data-testid="stTabs"] button[data-baseweb="tab"] p,
+div[data-testid="stTabs"] [data-testid="stTab"] p,
+div[data-testid="stTabs"] [role="tab"] p {
+  color: inherit !important;
+  font-size: inherit !important;
+  font-weight: inherit !important;
+}
+
+div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"],
+div[data-testid="stTabs"] [data-testid="stTab"][aria-selected="true"],
+div[data-testid="stTabs"] [data-testid="stTab"][data-selected],
+div[data-testid="stTabs"] [role="tab"][aria-selected="true"],
+div[data-testid="stTabs"] [role="tab"][data-selected] {
   background: var(--sokol-navy) !important;
   color: #fff !important;
+}
+
+div[data-testid="stTabs"] [data-testid="stTab"][data-hovered]:not([data-selected]),
+div[data-testid="stTabs"] [role="tab"][data-hovered]:not([data-selected]),
+div[data-testid="stTabs"] [role="tab"]:hover:not([aria-selected="true"]):not([data-selected]) {
+  color: var(--sokol-navy) !important;
 }
 
 /* Кнопки — компактные и той же высоты, что у вкладок */

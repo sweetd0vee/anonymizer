@@ -149,6 +149,47 @@ def test_pdf_keeps_pdf_output():
     assert docx_bytes.startswith(b"PK")
 
 
+def test_csv_keeps_csv_output():
+    from anon.readers import LoadedDoc
+
+    text = "ФИО,ИНН\nИванов,7707083893\n"
+    loaded = readers.load_from_bytes("people.csv", text.encode("utf-8"))
+    assert loaded.kind == "csv"
+    assert "Иванов" in loaded.text
+
+    start = loaded.text.index("Иванов")
+    inn_start = loaded.text.index("7707083893")
+    ents = [
+        Entity("FIO", start, start + 6, "Иванов",
+               norm_key="иванов", tag="[ФИО1]"),
+        Entity("INN", inn_start, inn_start + 10, "7707083893",
+               norm_key="7707083893", tag="[ИНН1]"),
+    ]
+    out_name = writers.anon_output_path(loaded.path)
+    assert out_name.endswith("people_anon.csv")
+    data = writers.anonymized_bytes(loaded, ents, out_name)
+    out = data.decode("utf-8-sig")
+    assert "Иванов" not in out
+    assert "7707083893" not in out
+    assert "[ФИО1]" in out and "[ИНН1]" in out
+    assert out.splitlines()[0] == "ФИО,ИНН"
+
+    cp1251 = "ФИО;ИНН\nПетров;7707083893\n".encode("cp1251")
+    loaded_1251 = readers.load_from_bytes("people.csv", cp1251)
+    assert "Петров" in loaded_1251.text
+
+    assert writers.anon_output_path("file.csv").endswith("_anon.csv")
+    assert writers.restored_output_path("answer.csv").endswith("_restored.csv")
+    restored, leftover = engine.deanonymize_text(out, {
+        "tags": {
+            "[ФИО1]": {"type": "ФИО", "canonical": "Иванов"},
+            "[ИНН1]": {"type": "ИНН", "canonical": "7707083893"},
+        }
+    })
+    assert not leftover
+    assert "Иванов" in restored and "7707083893" in restored
+
+
 def main():
     test_helpers()
 
@@ -259,6 +300,10 @@ def main():
     banner("pdf")
     test_pdf_keeps_pdf_output()
     print("pdf: ok")
+
+    banner("csv")
+    test_csv_keeps_csv_output()
+    print("csv: ok")
 
     print("\nВСЕ ТЕСТЫ ПРОЙДЕНЫ")
 

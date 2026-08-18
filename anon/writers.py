@@ -4,8 +4,9 @@
 Формат по умолчанию:
 - PDF → PDF (новый файл из обезличенного текста, исходная вёрстка не копируется);
 - DOCX → DOCX с сохранением runs/таблиц/колонтитулов;
+- CSV → CSV (замена в тексте, разделители и кавычки исходника сохраняются);
 - TXT → DOCX.
-При скачивании формат можно сменить на PDF, DOCX или TXT.
+При скачивании формат можно сменить на PDF, DOCX, TXT или CSV.
 """
 from __future__ import annotations
 
@@ -27,10 +28,11 @@ def _normalized_ext(override: str | None, default: str) -> str:
 def anon_output_path(
     src_path: str, out_dir: str | None = None, ext: str | None = None,
 ) -> str:
-    """Имя обезличенного файла. ext: '.pdf' | '.docx' | '.txt' или None (по источнику)."""
+    """Имя обезличенного файла. ext: '.pdf' | '.docx' | '.txt' | '.csv' или None (по источнику)."""
     folder, name = os.path.split(src_path)
     base, src_ext = os.path.splitext(name)
-    default = ".pdf" if src_ext.lower() == ".pdf" else ".docx"
+    src_ext = src_ext.lower()
+    default = src_ext if src_ext in {".pdf", ".csv"} else ".docx"
     out_ext = _normalized_ext(ext, default)
     return os.path.join(out_dir or folder, f"{base}_anon{out_ext.lower()}")
 
@@ -41,7 +43,7 @@ def restored_output_path(src_path: str, ext: str | None = None) -> str:
     for suffix in ("_anon", ".anon", "_restored"):
         base = base.replace(suffix, "")
     src_ext = src_ext.lower()
-    default = src_ext if src_ext in {".pdf", ".txt"} else ".docx"
+    default = src_ext if src_ext in {".pdf", ".txt", ".csv"} else ".docx"
     out_ext = _normalized_ext(ext, default)
     return os.path.join(folder, f"{base}_restored{out_ext.lower()}")
 
@@ -73,6 +75,8 @@ def text_bytes(text: str, out_path: str) -> bytes:
         return buf.getvalue()
     if ext == ".pdf":
         return pdf_from_text(text)
+    if ext == ".csv":
+        return text.encode("utf-8-sig")
     return text.encode("utf-8")
 
 

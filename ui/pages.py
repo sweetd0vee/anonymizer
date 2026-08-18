@@ -78,8 +78,8 @@ def page_anonymize() -> None:
         "Загрузите документы, проверьте подсветку и скачайте обезличенные файлы."
     )
     uploads = st.file_uploader(
-        "Документы (docx, pdf, txt). Несколько файлов — общая таблица тегов.",
-        type=["docx", "pdf", "txt"],
+        "Документы (docx, pdf, txt, csv). Несколько файлов — общая таблица тегов.",
+        type=["docx", "pdf", "txt", "csv"],
         accept_multiple_files=True,
         key="anon_uploads",
     )
@@ -294,8 +294,8 @@ def page_restore() -> None:
     )
     a1, a2 = st.columns(2)
     answer = a1.file_uploader(
-        "Ответ LLM (txt, docx)",
-        type=["txt", "docx"],
+        "Ответ LLM (txt, docx, csv)",
+        type=["txt", "docx", "csv"],
         key="restore_answer",
     )
     mapping_file = a2.file_uploader(

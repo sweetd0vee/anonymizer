@@ -1,8 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Чтение документов: TXT, DOCX, PDF (+ OCR для сканов без текстового слоя).
+"""Чтение документов: TXT, CSV, DOCX, PDF (+ OCR для сканов без текстового слоя).
 
-TXT
+TXT / CSV
     utf-8-sig → utf-8 → cp1251; при неудаче — utf-8 с заменой символов.
+    CSV читается как текст: разделители и кавычки не трогаем, сущности
+    ищутся в содержимом ячеек.
 
 DOCX
     Текст склеивается из абзацев тела, таблиц (включая вложенные) и колонтитулов,
@@ -23,7 +25,7 @@ from dataclasses import dataclass, field
 
 from .ocr import ocr_page, resolve_tesseract
 
-SUPPORTED_EXT = {".txt", ".docx", ".pdf"}
+SUPPORTED_EXT = {".txt", ".csv", ".docx", ".pdf"}
 STRUCTURED_KINDS = frozenset({"docx"})
 
 _HF_ATTRS = (
@@ -66,7 +68,7 @@ class TextMap:
 @dataclass
 class LoadedDoc:
     path: str
-    kind: str            # txt | docx | pdf
+    kind: str            # txt | csv | docx | pdf
     text: str
     source: object = None  # Document для DOCX
     fragments: TextMap | None = None
@@ -77,7 +79,9 @@ class LoadedDoc:
 def load(path: str) -> LoadedDoc:
     ext = os.path.splitext(path)[1].lower()
     if ext == ".txt":
-        return _load_text(path)
+        return _load_text(path, "txt")
+    if ext == ".csv":
+        return _load_text(path, "csv")
     if ext == ".docx":
         return _load_docx(path)
     if ext == ".pdf":
@@ -115,16 +119,16 @@ def _validate_docx_bytes(data: bytes) -> None:
         )
 
 
-def _load_text(path: str) -> LoadedDoc:
+def _load_text(path: str, kind: str = "txt") -> LoadedDoc:
     with open(path, "rb") as f:
         raw = f.read()
     for enc in ("utf-8-sig", "utf-8", "cp1251"):
         try:
-            return LoadedDoc(path, "txt", raw.decode(enc))
+            return LoadedDoc(path, kind, raw.decode(enc))
         except UnicodeDecodeError:
             continue
     return LoadedDoc(
-        path, "txt", raw.decode("utf-8", errors="replace"),
+        path, kind, raw.decode("utf-8", errors="replace"),
         warnings=["Кодировка определена неточно, проверьте текст"],
     )
 

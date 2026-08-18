@@ -46,4 +46,5 @@ CMD ["streamlit", "run", "app.py", \
      "--server.maxUploadSize=500", \
      "--server.fileWatcherType=none", \
      "--browser.serverAddress=localhost", \
-     "--browser.gatherUsageStats=false"]
+     "--browser.gatherUsageStats=false", \
+     "--theme.primaryColor=#0A365F"]
