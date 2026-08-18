@@ -37,7 +37,8 @@
     function grabSelection() {
       var t = (window.getSelection() || "").toString().trim();
       if (t.length >= 2) {
-        send("streamlit:setComponentValue", {value: t, dataType: "json"});
+        // Поток выделения — обычная строка; не пытайтесь парсить её как JSON.
+        send("streamlit:setComponentValue", {value: t, dataType: "text"});
       }
     }
     document.addEventListener("mouseup", grabSelection);

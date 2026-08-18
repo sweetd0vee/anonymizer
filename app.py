@@ -2,6 +2,7 @@
 """Веб-интерфейс анонимизатора на Streamlit."""
 from __future__ import annotations
 
+import base64
 import html
 import json
 import os
@@ -483,9 +484,23 @@ def inject_theme():
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
+def inject_tab_icon() -> None:
+    """Устанавливает favicon вкладки из локального `sberbank.png`."""
+    icon_path = os.path.join(os.path.dirname(__file__), "sberbank.png")
+    if not os.path.exists(icon_path):
+        return
+    with open(icon_path, "rb") as f:
+        b64 = base64.b64encode(f.read()).decode("ascii")
+    st.markdown(
+        f"<link rel='icon' href='data:image/png;base64,{b64}' />",
+        unsafe_allow_html=True,
+    )
+
+
 def main():
     st.set_page_config(page_title=APP_TITLE, layout="wide", page_icon="📄")
     inject_theme()
+    inject_tab_icon()
     st.title(APP_TITLE)
     init_state()
     sidebar_types()
