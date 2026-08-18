@@ -238,9 +238,11 @@ def sidebar_types():
         config.save_settings({"enabled_types": sorted(new_types)})
         apply_enabled_types()
         st.session_state.editor_rev += 1
-
-    st.sidebar.caption("Добавленное вручную заменяется всегда.")
     st.sidebar.markdown("---")
+
+
+def sidebar_highlight_legend() -> None:
+    """Список категорий подсветки — внизу сайдбара."""
     st.sidebar.caption("Подсветка")
     legend = " ".join(
         f'<span style="background:{COLORS[c]};padding:2px 6px;border-radius:4px;'
@@ -276,6 +278,7 @@ def page_anonymize():
     files: list[FileState] = st.session_state.files
     if not files:
         st.info("Выберите файл или несколько файлов и нажмите «Обработать».")
+        sidebar_highlight_legend()
         return
 
     errors = [fs for fs in files if fs.error]
@@ -289,6 +292,7 @@ def page_anonymize():
         st.error(f"{fs.name}: {fs.error}")
 
     if not ok_files:
+        sidebar_highlight_legend()
         return
 
     names = [fs.name for fs in files]
@@ -297,87 +301,89 @@ def page_anonymize():
     for w in current.warnings:
         st.warning(w)
 
-    show_result = st.checkbox("Показать результат замены", value=False)
+    show_result = st.sidebar.checkbox(
+        "Показать результат замены",
+        value=False,
+        key="show_result",
+    )
     if st.session_state.get("shown_file") != current_name:
         st.session_state.shown_file = current_name
         st.session_state.editor_rev += 1
 
-    left, right = st.columns((3, 2), gap="large")
-    with left:
-        st.caption("Текст документа — выделите пропущенный фрагмент, он попадёт в поле справа")
-        if current.error:
-            st.error(current.error)
-            selected = ""
-        else:
-            selected = render_preview(
-                highlight_html(current.text, current.entities, show_result),
-                key=f"preview_{current.name}",
-            )
-        if selected and selected != st.session_state.get("_last_preview_sel"):
-            st.session_state._last_preview_sel = selected
-            st.session_state.manual_fragment = selected
-
-    with right:
-        st.caption("Найденные данные — снимите галочку, чтобы не заменять")
-        groups: dict[str, list[Entity]] = {}
-        for e in current.entities:
-            groups.setdefault(e.tag or "?", []).append(e)
-        rows = []
-        for tag, ents in groups.items():
-            e0 = ents[0]
-            rows.append({
-                "Заменить": e0.enabled,
-                "Тег": tag,
-                "Тип": ENTITY_TYPES.get(e0.type, e0.type),
-                "Значение": e0.text[:80],
-                "×": len(ents),
-            })
-        if not rows:
-            st.info("Ничего не найдено. Добавьте фрагмент вручную, если нужно.")
-        else:
-            edited = st.data_editor(
-                rows,
-                key=f"ents_{st.session_state.editor_rev}",
-                hide_index=True,
-                width="stretch",
-                disabled=["Тег", "Тип", "Значение", "×"],
-                column_config={
-                    "Заменить": st.column_config.CheckboxColumn(width="small"),
-                    "×": st.column_config.NumberColumn(width="small"),
-                },
-            )
-            records = edited.to_dict("records") if hasattr(edited, "to_dict") else edited
-            for row in records:
-                tag = row["Тег"]
-                want = bool(row["Заменить"])
-                if groups.get(tag) and groups[tag][0].enabled != want:
-                    set_tag_enabled(tag, want)
-
-        st.markdown("**Пропущенное**")
-        fragment = st.text_input(
-            "Фрагмент из текста",
-            placeholder="Выделите в документе или вставьте сюда",
-            key="manual_fragment",
+    # Превью с подсветкой (и выбором фрагмента) переносим в сайдбар
+    st.sidebar.caption("Текст документа — выделите фрагмент")
+    if current.error:
+        st.sidebar.error(current.error)
+        selected = ""
+    else:
+        selected = render_preview(
+            highlight_html(current.text, current.entities, show_result),
+            key=f"sidebar_preview_{current.name}",
         )
-        labels = [label for _, label in MANUAL_TYPES]
-        m1, m2 = st.columns((2, 1))
-        chosen = m1.selectbox("Тип", labels, index=0)
-        if m2.button("Добавить", width="stretch"):
-            etype = MANUAL_TYPES[labels.index(chosen)][0]
-            n, reason = add_manual(fragment, etype)
-            if n:
-                st.session_state.editor_rev += 1
-                st.success(f"Добавлено вхождений: {n}")
-                st.rerun()
-            elif reason == "empty":
-                st.warning("Выделите текст в документе слева или вставьте его в поле.")
-            elif reason == "not_found":
-                st.warning("Такой фрагмент не найден в тексте. Скопируйте его точно как в документе.")
-            else:
-                st.warning(
-                    "Этот фрагмент уже входит в найденную сущность. "
-                    "Снимите галочку у неё в таблице или выберите другой фрагмент."
-                )
+    if selected and selected != st.session_state.get("_last_preview_sel"):
+        st.session_state._last_preview_sel = selected
+        st.session_state.manual_fragment = selected
+
+    st.caption("Найденные данные — снимите галочку, чтобы не заменять")
+    groups: dict[str, list[Entity]] = {}
+    for e in current.entities:
+        groups.setdefault(e.tag or "?", []).append(e)
+    rows = []
+    for tag, ents in groups.items():
+        e0 = ents[0]
+        rows.append({
+            "Заменить": e0.enabled,
+            "Тег": tag,
+            "Тип": ENTITY_TYPES.get(e0.type, e0.type),
+            "Значение": e0.text[:80],
+            "×": len(ents),
+        })
+    if not rows:
+        st.info("Ничего не найдено. Добавьте фрагмент вручную, если нужно.")
+    else:
+        edited = st.data_editor(
+            rows,
+            key=f"ents_{st.session_state.editor_rev}",
+            hide_index=True,
+            width="stretch",
+            disabled=["Тег", "Тип", "Значение", "×"],
+            column_config={
+                "Заменить": st.column_config.CheckboxColumn(width="small"),
+                "×": st.column_config.NumberColumn(width="small"),
+            },
+        )
+        records = edited.to_dict("records") if hasattr(edited, "to_dict") else edited
+        for row in records:
+            tag = row["Тег"]
+            want = bool(row["Заменить"])
+            if groups.get(tag) and groups[tag][0].enabled != want:
+                set_tag_enabled(tag, want)
+
+    st.markdown("**Пропущенное**")
+    fragment = st.text_input(
+        "Фрагмент из текста",
+        placeholder="Выделите в документе или вставьте сюда",
+        key="manual_fragment",
+    )
+    labels = [label for _, label in MANUAL_TYPES]
+    m1, m2 = st.columns((2, 1))
+    chosen = m1.selectbox("Тип", labels, index=0)
+    if m2.button("Добавить", width="stretch"):
+        etype = MANUAL_TYPES[labels.index(chosen)][0]
+        n, reason = add_manual(fragment, etype)
+        if n:
+            st.session_state.editor_rev += 1
+            st.success(f"Добавлено вхождений: {n}")
+            st.rerun()
+        elif reason == "empty":
+            st.warning("Выделите текст в документе слева или вставьте его в поле.")
+        elif reason == "not_found":
+            st.warning("Такой фрагмент не найден в тексте. Скопируйте его точно как в документе.")
+        else:
+            st.warning(
+                "Этот фрагмент уже входит в найденную сущность. "
+                "Снимите галочку у неё в таблице или выберите другой фрагмент."
+            )
 
     st.markdown("---")
     st.subheader("Скачать")
@@ -416,6 +422,9 @@ def page_anonymize():
     )
     if len(ok_files) > 1:
         d3.caption("В ZIP уже есть `_mapping.json`.")
+
+    # Легенда подсветки нужна именно внизу сайдбара, поэтому рисуем в конце
+    sidebar_highlight_legend()
 
 
 def page_restore():
