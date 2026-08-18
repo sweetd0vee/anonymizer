@@ -208,6 +208,44 @@ div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] {
   opacity: 0.55;
 }
 
+/* Компактные выпадающие списки */
+[data-testid="stSelectbox"] label {
+  font-size: var(--control-font) !important;
+  font-weight: 600 !important;
+  min-height: auto !important;
+  margin-bottom: 0.2rem !important;
+  padding-bottom: 0 !important;
+}
+
+[data-testid="stSelectbox"] label p {
+  font-size: var(--control-font) !important;
+  font-weight: 600 !important;
+}
+
+[data-testid="stSelectbox"] [data-baseweb="select"] > div {
+  min-height: var(--control-height) !important;
+  height: var(--control-height) !important;
+  max-height: var(--control-height) !important;
+  font-size: var(--control-font) !important;
+  border-radius: var(--control-radius) !important;
+}
+
+/* Формат и кнопка скачивания вплотную, без широкой колонки */
+[data-testid="stHorizontalBlock"]:has([data-testid="stDownloadButton"]):has([data-testid="stSelectbox"]) {
+  display: flex !important;
+  flex-wrap: nowrap !important;
+  justify-content: flex-start !important;
+  align-items: flex-end !important;
+  gap: 8px !important;
+}
+
+[data-testid="stHorizontalBlock"]:has([data-testid="stDownloadButton"]):has([data-testid="stSelectbox"]) > div {
+  width: auto !important;
+  flex: 0 0 auto !important;
+  min-width: 0 !important;
+  max-width: none !important;
+}
+
 /* Зона загрузки файла */
 [data-testid="stFileUploaderDropzone"] {
   background: #F3F5F7 !important;

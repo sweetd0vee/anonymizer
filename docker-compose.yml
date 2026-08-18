@@ -1,0 +1,12 @@
+services:
+  anonymizer:
+    build: .
+    image: anonymizer:latest
+    ports:
+      - "8501:8501"
+    restart: unless-stopped
+    volumes:
+      - anonymizer-data:/home/appuser/Anonymizer
+
+volumes:
+  anonymizer-data:

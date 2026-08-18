@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Настройки программы: %APPDATA%\\Anonymizer\\config.json."""
+"""Настройки программы: `%APPDATA%\\Anonymizer\\config.json` на Windows,
+`~/Anonymizer/config.json` в остальных случаях.
+
+Сейчас хранится только набор включённых категорий (`enabled_types`).
+Ошибка чтения/записи не роняет приложение.
+"""
 from __future__ import annotations
 
 import json
@@ -27,4 +32,4 @@ def save_settings(settings: dict) -> None:
         with open(_path(), "w", encoding="utf-8") as f:
             json.dump(settings, f, ensure_ascii=False, indent=2)
     except OSError:
-        pass  # настройки не критичны, не роняем программу
+        pass

@@ -1,5 +1,10 @@
 # -*- coding: utf-8 -*-
-"""Модель сущностей и реестр тегов."""
+"""Модель сущностей, типы тегов и реестр соответствий.
+
+Тег строится как `[МЕТКАN]`, где метка — русское имя типа (`ФИО`, `ИНН`, …),
+а N — порядковый номер внутри типа на весь пакет файлов. Одинаковые значения
+(после нормализации `norm_key`) получают один и тот же тег.
+"""
 from __future__ import annotations
 
 import json
@@ -7,7 +12,7 @@ from dataclasses import dataclass
 from datetime import datetime
 
 
-# Типы сущностей: код -> русская метка для тега [МЕТКА1]
+# Код типа -> метка в тексте документа: [ФИО1], [ИНН2], …
 ENTITY_TYPES = {
     "FIO": "ФИО",
     "ORG": "ОРГ",
@@ -22,10 +27,11 @@ ENTITY_TYPES = {
     "KPP": "КПП",
     "PHONE": "ТЕЛЕФОН",
     "EMAIL": "EMAIL",
+    "SITE": "САЙТ",
     "OTHER": "ДАННЫЕ",
 }
 
-# Подписи в боковой панели (тег в тексте — из ENTITY_TYPES)
+# Подписи в боковой панели. Тег в тексте берётся из ENTITY_TYPES.
 SETTING_TYPES = [
     ("FIO", "ФИО"),
     ("ORG", "Организации"),
@@ -33,28 +39,39 @@ SETTING_TYPES = [
     ("DATE", "Даты"),
     ("INN", "ИНН"),
     ("OGRN", "ОГРН"),
+    ("KPP", "КПП"),
     ("SNILS", "СНИЛС"),
     ("PASSPORT", "Паспорта"),
     ("ACCOUNT", "Счета"),
     ("BIK", "БИК"),
     ("PHONE", "Телефоны"),
     ("EMAIL", "Email"),
+    ("SITE", "Сайты"),
 ]
 MANUAL_TYPES = SETTING_TYPES + [("OTHER", "Другое (перс. данные)")]
+
+# При пересечении спанов выигрывает больший приоритет, затем длина.
+# Регулярки с контрольной суммой точнее NER, поэтому ИНН/ОГРН/СНИЛС выше ФИО/ОРГ.
+OVERLAP_PRIORITY = {
+    "SNILS": 10, "ACCOUNT": 10, "OGRN": 10, "INN": 10, "PASSPORT": 9,
+    "BIK": 9, "KPP": 9, "PHONE": 8, "EMAIL": 8, "SITE": 8, "DATE": 8,
+    "ADDR": 7, "ORG": 7, "FIO": 5, "OTHER": 4,
+}
 
 
 @dataclass
 class Entity:
     """Одно вхождение сущности в тексте документа."""
-    type: str            # код из ENTITY_TYPES
+
+    type: str             # код из ENTITY_TYPES
     start: int
     stop: int
     text: str
-    norm_key: str        # ключ группировки (одинаковый у всех форм одной сущности)
+    norm_key: str         # ключ группировки (одинаковый у всех форм одной сущности)
     source: str = "auto"  # auto | manual
     enabled: bool = True
-    tag: str = ""        # присвоенный тег вида [ФИО1]
-    norm_text: str = ""  # нормализованная форма (именительный падеж), если известна
+    tag: str = ""         # присвоенный тег вида [ФИО1]
+    norm_text: str = ""   # нормализованная форма (именительный падеж), если известна
 
     def overlaps(self, other: "Entity") -> bool:
         return self.start < other.stop and other.start < self.stop
@@ -63,7 +80,7 @@ class Entity:
 class TagRegistry:
     """Реестр тегов, общий для всех файлов пакета: (type, norm_key) -> [ФИО1]."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self._by_key: dict[tuple[str, str], str] = {}
         self._counters: dict[str, int] = {}
         # tag -> {"type": метка, "canonical": исходное значение, "forms": set}

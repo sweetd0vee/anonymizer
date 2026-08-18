@@ -7,7 +7,7 @@ import sys
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), ".."))
 
 from anon import engine, readers, writers
-from anon.detectors import detect_structured, valid_inn, valid_ogrn, valid_snils
+from anon.detectors import detect_orgs_regex, detect_structured, valid_inn, valid_ogrn, valid_snils
 from anon.entities import Entity, TagRegistry
 
 SAMPLE = """АРБИТРАЖНЫЙ СУД ГОРОДА МОСКВЫ
@@ -72,6 +72,34 @@ def test_helpers():
         for e in prospect
     )
 
+    by_addr = detect_structured(
+        "проживает по адресу:\n220030\nпроспект Независимости,\n32А-1."
+    )
+    by_texts = {e.text for e in by_addr if e.type == "ADDR"}
+    assert any("220030" in t for t in by_texts)
+    assert any("проспект Независимости" in t and "32А-1" in t for t in by_texts)
+
+    sites = detect_structured(
+        "Сайт банка: www.sber-bank.by, зеркало https://sber-bank.by/credits "
+        "и почта ivanov.ip@example.com."
+    )
+    site_texts = {e.text for e in sites if e.type == "SITE"}
+    assert "www.sber-bank.by" in site_texts
+    assert any(t.startswith("https://sber-bank.by") for t in site_texts)
+    assert all("@" not in t for t in site_texts)
+    assert not any(e.type == "SITE" and e.text == "bank.by" for e in sites)
+    site_keys = {e.norm_key for e in sites if e.type == "SITE"}
+    assert "sber-bank.by" in site_keys
+
+    zhlobin = "г. Рогачеве, г. Жлобине ОАО «БПС-Сбербанк»"
+    zhlobin_ents = engine.resolve_overlaps(
+        detect_structured(zhlobin) + detect_orgs_regex(zhlobin)
+    )
+    assert any(e.type == "ORG" and "Сбербанк" in e.text for e in zhlobin_ents)
+    addr_join = " ".join(e.text for e in zhlobin_ents if e.type == "ADDR")
+    assert "Рогачеве" in addr_join and "Жлобине" in addr_join
+    assert not any(e.type == "ADDR" and "ОАО" in e.text for e in zhlobin_ents)
+
     a = [Entity("FIO", 0, 21, "Иванов Иван Петрович", "иванов|и")]
     b = [Entity("FIO", 0, 6, "Иванов", "иванов")]
     registry = TagRegistry()
@@ -88,6 +116,37 @@ def test_helpers():
     assert restored == r"ref\1value и Петров"
     assert not leftover
     print("Вспомогательные проверки: ok")
+
+
+def test_pdf_keeps_pdf_output():
+    import fitz
+    from anon.readers import LoadedDoc
+
+    text = "Истец Иванов, ИНН 7707083893."
+    loaded = LoadedDoc("contract.pdf", "pdf", text)
+    start = text.index("7707083893")
+    ent = Entity("INN", start, start + 10, "7707083893",
+                 norm_key="7707083893", tag="[ИНН1]")
+    out_name = writers.anon_output_path(loaded.path)
+    assert out_name.endswith("contract_anon.pdf")
+    data = writers.anonymized_bytes(loaded, [ent], out_name)
+    assert data.startswith(b"%PDF")
+    doc = fitz.open(stream=data, filetype="pdf")
+    extracted = "".join(page.get_text("text") for page in doc)
+    doc.close()
+    assert "7707083893" not in extracted
+    assert "[ИНН1]" in extracted
+    assert writers.anon_output_path("file.docx").endswith("_anon.docx")
+    assert writers.anon_output_path("file.txt").endswith("_anon.docx")
+    assert writers.anon_output_path("file.pdf", ext=".txt").endswith("_anon.txt")
+    assert writers.restored_output_path("answer.docx").endswith("_restored.docx")
+    assert writers.restored_output_path("answer.pdf", ext=".txt").endswith(
+        "_restored.txt"
+    )
+    txt = writers.anonymized_bytes(loaded, [ent], "contract_anon.txt")
+    assert txt.startswith("Истец Иванов, ИНН [ИНН1].".encode("utf-8"))
+    docx_bytes = writers.anonymized_bytes(loaded, [ent], "contract_anon.docx")
+    assert docx_bytes.startswith(b"PK")
 
 
 def main():
@@ -123,6 +182,7 @@ def main():
         "ул. Ленина",
         "15.03.2024",
         "15 марта 2024",
+        "773601001",
     ):
         assert pii not in anon_text, f"НЕ ЗАМЕНЕНО: {pii}"
 
@@ -195,6 +255,10 @@ def main():
     check_s = readers.load(out_s)
     assert "Ленина" not in check_s.text
     print("docx на стыке абзацев: ok")
+
+    banner("pdf")
+    test_pdf_keeps_pdf_output()
+    print("pdf: ok")
 
     print("\nВСЕ ТЕСТЫ ПРОЙДЕНЫ")
 

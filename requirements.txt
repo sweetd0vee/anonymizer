@@ -1,5 +1,5 @@
-natasha
-python-docx
-pymupdf
-setuptools<81  # pymorphy2 требует pkg_resources, удалён в setuptools 81+
-streamlit
+natasha==1.6.0
+python-docx==1.2.0
+pymupdf==1.28.2
+setuptools==80.10.2  # pymorphy2 требует pkg_resources, удалён в setuptools 81+
+streamlit==1.61.1

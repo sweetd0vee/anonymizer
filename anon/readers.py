@@ -1,19 +1,30 @@
 # -*- coding: utf-8 -*-
-"""Чтение документов: txt, docx, pdf (+OCR для сканов)."""
+"""Чтение документов: TXT, DOCX, PDF (+ OCR для сканов без текстового слоя).
+
+TXT
+    utf-8-sig → utf-8 → cp1251; при неудаче — utf-8 с заменой символов.
+
+DOCX
+    Текст склеивается из абзацев тела, таблиц (включая вложенные) и колонтитулов,
+    которые уже есть в файле. Пустые колонтитулы не создаются — иначе python-docx
+    изменит документ при сохранении. Координаты сущностей считаются в этой склейке
+    (`\\n` между абзацами), поэтому адрес, разрезанный на два абзаца, всё равно
+    находится.
+
+PDF
+    Если на страницах в среднем меньше 25 символов текста — это скан, запускается
+    Tesseract (`rus+eng`, PSM 4, 300 dpi). Иначе берётся текстовый слой.
+"""
 from __future__ import annotations
 
 import os
-import shutil
-import subprocess
 import tempfile
 from dataclasses import dataclass, field
+
+from .ocr import ocr_page, resolve_tesseract
+
 SUPPORTED_EXT = {".txt", ".docx", ".pdf"}
 STRUCTURED_KINDS = frozenset({"docx"})
-
-TESSERACT_CANDIDATES = (
-    r"C:\Program Files\Tesseract-OCR\tesseract.exe",
-    r"C:\Program Files (x86)\Tesseract-OCR\tesseract.exe",
-)
 
 _HF_ATTRS = (
     "header", "footer",
@@ -21,29 +32,21 @@ _HF_ATTRS = (
     "even_page_header", "even_page_footer",
 )
 
-
-def resolve_tesseract() -> tuple[str | None, str | None]:
-    """Возвращает (путь к tesseract.exe, папка tessdata или None).
-
-    Приоритет у встроенного движка (vendor/tesseract), затем системная установка.
-    """
-    vendor = os.path.join(os.path.dirname(os.path.dirname(__file__)), "vendor", "tesseract")
-    bundled = os.path.join(vendor, "tesseract.exe")
-    if os.path.exists(bundled):
-        tessdata = os.path.join(vendor, "tessdata")
-        return bundled, (tessdata if os.path.isdir(tessdata) else None)
-    found = shutil.which("tesseract")
-    if found:
-        return found, None
-    for candidate in TESSERACT_CANDIDATES:
-        if os.path.exists(candidate):
-            return candidate, None
-    return None, None
+__all__ = [
+    "LoadedDoc",
+    "STRUCTURED_KINDS",
+    "SUPPORTED_EXT",
+    "TextMap",
+    "load",
+    "load_from_bytes",
+    "resolve_tesseract",
+]
 
 
 @dataclass
 class TextMap:
     """Фрагменты документа и их позиции в тексте, склеенном через \\n."""
+
     texts: list[str] = field(default_factory=list)
     offsets: list[int] = field(default_factory=list)
     units: list = field(default_factory=list)
@@ -65,10 +68,10 @@ class LoadedDoc:
     path: str
     kind: str            # txt | docx | pdf
     text: str
-    source: object = None  # Document / Workbook / Presentation
+    source: object = None  # Document для DOCX
     fragments: TextMap | None = None
     ocr_used: bool = False
-    warnings: list = field(default_factory=list)
+    warnings: list[str] = field(default_factory=list)
 
 
 def load(path: str) -> LoadedDoc:
@@ -185,7 +188,7 @@ def _load_pdf(path: str) -> LoadedDoc:
     doc = fitz.open(path)
     pages = [page.get_text("text") for page in doc]
     total_chars = sum(len(p.strip()) for p in pages)
-    warnings = []
+    warnings: list[str] = []
     ocr_used = False
     if total_chars < 25 * len(pages):
         tess, tessdata = resolve_tesseract()
@@ -197,7 +200,7 @@ def _load_pdf(path: str) -> LoadedDoc:
             )
         pages = []
         for i in range(len(doc)):
-            page_text, ocr_err = _ocr_page(doc, i, tess, tessdata)
+            page_text, ocr_err = ocr_page(doc, i, tess, tessdata)
             pages.append(page_text)
             if ocr_err:
                 warnings.append(f"OCR, страница {i + 1}: {ocr_err}")
@@ -208,26 +211,3 @@ def _load_pdf(path: str) -> LoadedDoc:
         path, "pdf", "\n\n".join(p.strip() for p in pages),
         ocr_used=ocr_used, warnings=warnings,
     )
-
-
-def _ocr_page(doc, page_index: int, tesseract: str,
-              tessdata: str | None = None) -> tuple[str, str | None]:
-    page = doc[page_index]
-    pix = page.get_pixmap(dpi=300)
-    with tempfile.TemporaryDirectory() as td:
-        img = os.path.join(td, "page.png")
-        pix.save(img)
-        cmd = [tesseract, img, "stdout", "-l", "rus+eng", "--psm", "4"]
-        if tessdata:
-            cmd += ["--tessdata-dir", tessdata]
-        res = subprocess.run(
-            cmd, capture_output=True, timeout=180,
-            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
-        )
-    text = res.stdout.decode("utf-8", errors="replace")
-    if res.returncode == 0:
-        return text, None
-    err = res.stderr.decode("utf-8", errors="replace").strip()
-    if text.strip():
-        return text, err or f"Tesseract вернул код {res.returncode}"
-    return "", err or f"Tesseract не распознал страницу (код {res.returncode})"

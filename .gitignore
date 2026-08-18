@@ -224,6 +224,7 @@ __marimo__/
 
 # Test fixtures / generated artifacts
 tests/*_anon.docx
+tests/*_anon.pdf
 tests/*_restored.docx
 tests/scan.pdf
 
