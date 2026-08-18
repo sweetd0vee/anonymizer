@@ -59,12 +59,11 @@ def mime_for(name: str) -> str:
 
 
 def render_download_format(key: str):
-    fmt_col, btn_col = st.columns(2, vertical_alignment="bottom", gap=None)
+    fmt_col, btn_col = st.columns(2, vertical_alignment="bottom", gap="small")
     with fmt_col:
         selected = st.selectbox(
             "Формат",
             options=DOWNLOAD_FORMATS,
             key=key,
-            width=108,
         )
     return selected, btn_col

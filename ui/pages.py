@@ -151,7 +151,7 @@ def _render_metrics(
             for fs in files
         ],
         hide_index=True,
-        width="stretch",
+        use_container_width=True,
     )
     for fs in errors:
         st.error(f"{fs.name}: {fs.error}")
@@ -220,7 +220,7 @@ def _render_entity_table(current: FileState) -> None:
         display_rows,
         key=f"ents_{st.session_state.editor_rev}",
         hide_index=True,
-        width="stretch",
+        use_container_width=True,
         disabled=["Тег", "Тип", "Значение", "Количество"],
         column_config={
             "Заменить": st.column_config.CheckboxColumn(width="small"),
@@ -253,7 +253,7 @@ def _render_manual_add() -> None:
         index=0,
         label_visibility="collapsed",
     )
-    if m3.button("Добавить", type="primary", width="stretch"):
+    if m3.button("Добавить", type="primary", use_container_width=True):
         etype = MANUAL_TYPES[labels.index(chosen)][0]
         n, reason = add_manual(fragment, etype)
         if n:
@@ -309,7 +309,7 @@ def page_restore() -> None:
             "Восстановить",
             type="primary",
             disabled=not (answer and mapping_file),
-            width="stretch",
+            use_container_width=True,
         ):
             try:
                 mapping = load_mapping_bytes(mapping_file.getvalue())
