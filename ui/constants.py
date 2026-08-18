@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from anon.entities import SETTING_TYPES
 
-APP_TITLE = "Анонимизатор документов"
+APP_TITLE = "Обезличивание документов"
 
 COLORS = {
     "FIO": "#ffd6d6", "ORG": "#d6e4ff", "ADDR": "#d9f2d9", "DATE": "#fde6c8",

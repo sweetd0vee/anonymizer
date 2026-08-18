@@ -1,14 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-hidden="true">
   <circle cx="32" cy="32" r="32" fill="#0A365F"/>
-  <path fill="#F4F7FA" d="M19 27c.4-9.2 6.2-15 13-15s12.6 5.8 13 15H19z"/>
-  <path fill="#F4F7FA" d="M8.5 28.2c0-2 2.4-3.6 7.2-4.4 5.2-.9 11.4-1.3 16.3-1.3s11.1.4 16.3 1.3c4.8.8 7.2 2.4 7.2 4.4 0 2.1-2.6 3.4-7.6 4.1-5.3.8-11.4 1.1-15.9 1.1s-10.6-.3-15.9-1.1c-5-.7-7.6-2-7.6-4.1z"/>
-  <rect x="20.5" y="24.2" width="23" height="2.4" rx="1.2" fill="#0A365F"/>
-  <circle cx="23" cy="40" r="6.6" fill="#061E38"/>
-  <circle cx="23" cy="40" r="7.4" fill="none" stroke="#F4F7FA" stroke-width="2.3"/>
-  <circle cx="21.2" cy="38.2" r="1.5" fill="#fff" opacity=".4"/>
-  <circle cx="41" cy="40" r="6.6" fill="#061E38"/>
-  <circle cx="41" cy="40" r="7.4" fill="none" stroke="#F4F7FA" stroke-width="2.3"/>
-  <circle cx="39.2" cy="38.2" r="1.5" fill="#fff" opacity=".4"/>
-  <path d="M30.2 40h3.6" stroke="#F4F7FA" stroke-width="2.2" stroke-linecap="round"/>
-  <path fill="#F4F7FA" d="M18.5 54.5c5.2-7.2 9.8-9.2 13.5-9.2s8.3 2 13.5 9.2c-4.2-2.2-8.8-3.3-13.5-3.3s-9.3 1.1-13.5 3.3z"/>
+  <path fill="#F4F7FA" d="M20 12h17l10 10v28a5 5 0 0 1-5 5H20a5 5 0 0 1-5-5V17a5 5 0 0 1 5-5z"/>
+  <path fill="#C5D4E0" d="M37 12v8a2 2 0 0 0 2 2h8z"/>
+  <rect x="22" y="28" width="11" height="2.6" rx="1.3" fill="#6D8BA3"/>
+  <rect x="22" y="34" width="18" height="4.2" rx="1.4" fill="#0A365F"/>
+  <rect x="22" y="41.5" width="8" height="2.6" rx="1.3" fill="#6D8BA3"/>
+  <rect x="22" y="47.2" width="15" height="4.2" rx="1.4" fill="#0A365F"/>
 </svg>
