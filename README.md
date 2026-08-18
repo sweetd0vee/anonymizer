@@ -6,8 +6,7 @@
 
 **Документация:** [пайплайн](docs/pipeline.md) · [алгоритм распознавания](docs/recognition.md) · [использование](docs/usage.md)
 
-**Видео**
-https://drive.google.com/file/d/1VwPGKEOiYUn2lNsxKAsQTfSq0Vfpe3We/view?usp=sharing
+**Видео:** https://drive.google.com/file/d/1VwPGKEOiYUn2lNsxKAsQTfSq0Vfpe3We/view?usp=sharing
 
 ## Возможности
 
