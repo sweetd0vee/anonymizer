@@ -42,6 +42,10 @@ MIME = {
 AVAILABLE_TYPES = {code for code, _ in SETTING_TYPES}
 
 
+def count_words(text: str) -> int:
+    return len(text.split()) if text else 0
+
+
 @dataclass
 class FileState:
     name: str
@@ -214,7 +218,7 @@ def mime_for(name: str) -> str:
     return MIME.get(os.path.splitext(name)[1].lower(), "application/octet-stream")
 
 
-def sidebar_types():
+def render_category_types():
     labels = [label for _, label in SETTING_TYPES]
     by_label = {label: code for code, label in SETTING_TYPES}
     by_code = {code: label for code, label in SETTING_TYPES}
@@ -225,16 +229,14 @@ def sidebar_types():
             if code in st.session_state.enabled_types
         ]
 
-    # UI без выпадающего списка: отмечаем категории галочками.
-    selected_codes: set[str] = set()
-    for code, label in SETTING_TYPES:
-        if st.sidebar.checkbox(
-            label,
-            value=code in st.session_state.enabled_types,
-            key=f"replace_checkbox_{code}",
-        ):
-            selected_codes.add(code)
-    new_types = {"OTHER"} | selected_codes
+    with st.expander("Категории для замены"):
+        selected = st.multiselect(
+            "Категории для замены",
+            options=labels,
+            key="replace_types",
+            label_visibility="collapsed",
+        )
+    new_types = {"OTHER"} | {by_label[label] for label in selected}
 
     if new_types != st.session_state.enabled_types:
         st.session_state.enabled_types = new_types
@@ -243,21 +245,18 @@ def sidebar_types():
         st.session_state.editor_rev += 1
 
 
-def sidebar_highlight_legend() -> None:
-    """Список категорий подсветки — внизу сайдбара."""
-    st.sidebar.markdown(
-        '<p class="sidebar-legend-title">Подсветка</p>',
-        unsafe_allow_html=True,
-    )
+def render_highlight_legend() -> None:
+    """Список категорий подсветки под выбором категорий."""
     legend = "".join(
         f'<span class="sidebar-legend-tag" style="background:{COLORS[c]};">'
         f'{html.escape(l)}</span>'
         for c, l in SETTING_TYPES
     )
-    st.sidebar.markdown(
-        f'<div class="sidebar-legend-tags">{legend}</div>',
-        unsafe_allow_html=True,
-    )
+    with st.expander("Подсветка"):
+        st.markdown(
+            f'<div class="sidebar-legend-tags">{legend}</div>',
+            unsafe_allow_html=True,
+        )
 
 
 def page_anonymize():
@@ -270,7 +269,9 @@ def page_anonymize():
         accept_multiple_files=True,
         key="anon_uploads",
     )
-    btn_col, _ = st.columns(2)
+    render_category_types()
+    render_highlight_legend()
+    btn_col, toggle_col, _ = st.columns((1.1, 1.4, 3))
     with btn_col:
         if st.button("Обработать", type="primary", disabled=not uploads):
             with st.spinner("Анализ… первый запуск занимает около 10 секунд"):
@@ -283,25 +284,43 @@ def page_anonymize():
             st.session_state.pop("_last_preview_sel", None)
             st.session_state.manual_fragment = ""
             st.rerun()
+    with toggle_col:
+        st.checkbox(
+            "Показать результат замены",
+            value=False,
+            key="show_result",
+            disabled=not st.session_state.files,
+        )
 
     files: list[FileState] = st.session_state.files
     if not files:
         st.info("Выберите файл или несколько файлов и нажмите «Обработать».")
-        sidebar_highlight_legend()
         return
 
     errors = [fs for fs in files if fs.error]
     ok_files = [fs for fs in files if not fs.error]
     total = sum(len(fs.entities) for fs in ok_files)
-    c1, c2, c3 = st.columns(3)
+    total_words = sum(count_words(fs.text) for fs in ok_files)
+    c1, c2, c3, c4 = st.columns(4)
     c1.metric("Файлов", len(ok_files))
     c2.metric("Найдено данных", total)
     c3.metric("С ошибкой", len(errors))
+    c4.metric("Слов в тексте", total_words)
+    st.dataframe(
+        [
+            {
+                "Файл": fs.name,
+                "Слов в тексте": count_words(fs.text) if not fs.error else "—",
+            }
+            for fs in files
+        ],
+        hide_index=True,
+        width="stretch",
+    )
     for fs in errors:
         st.error(f"{fs.name}: {fs.error}")
 
     if not ok_files:
-        sidebar_highlight_legend()
         return
 
     names = [fs.name for fs in files]
@@ -310,23 +329,19 @@ def page_anonymize():
     for w in current.warnings:
         st.warning(w)
 
-    show_result = st.sidebar.checkbox(
-        "Показать результат замены",
-        value=False,
-        key="show_result",
-    )
+    show_result = st.session_state.show_result
     if st.session_state.get("shown_file") != current_name:
         st.session_state.shown_file = current_name
         st.session_state.editor_rev += 1
 
-    # Превью с подсветкой (и выбором фрагмента) переносим в сайдбар
+    # Превью с подсветкой показываем в основной области.
     if current.error:
-        st.sidebar.error(current.error)
+        st.error(current.error)
         selected = ""
     else:
         selected = render_preview(
             highlight_html(current.text, current.entities, show_result),
-            key=f"sidebar_preview_{current.name}",
+            key=f"preview_{current.name}",
         )
     if selected and selected != st.session_state.get("_last_preview_sel"):
         st.session_state._last_preview_sel = selected
@@ -374,8 +389,15 @@ def page_anonymize():
         "Фрагмент из текста",
         placeholder="Выделите в документе или вставьте сюда",
         key="manual_fragment",
+        label_visibility="collapsed",
     )
-    chosen = m2.selectbox("Тип", labels, index=0)
+    chosen = m2.selectbox(
+        "Тип",
+        labels,
+        index=0,
+        label_visibility="collapsed",
+    )
+    m3.markdown("<div style='height: 1.55rem;'></div>", unsafe_allow_html=True)
     if m3.button("Добавить", width="stretch"):
         etype = MANUAL_TYPES[labels.index(chosen)][0]
         n, reason = add_manual(fragment, etype)
@@ -395,10 +417,6 @@ def page_anonymize():
 
     st.markdown("---")
     st.subheader("Скачать")
-    st.warning(
-        "В файле соответствий — исходные персональные данные. "
-        "Его нельзя отправлять в облачные сервисы."
-    )
     d1, d2, d3 = st.columns(3)
     if len(ok_files) == 1:
         name, data = export_file(ok_files[0])
@@ -430,10 +448,6 @@ def page_anonymize():
     )
     if len(ok_files) > 1:
         d3.caption("В ZIP уже есть `_mapping.json`.")
-
-    # Легенда подсветки нужна именно внизу сайдбара, поэтому рисуем в конце
-    sidebar_highlight_legend()
-
 
 def page_restore():
     st.markdown(
@@ -515,7 +529,6 @@ def main():
     inject_theme()
     st.title(APP_TITLE)
     init_state()
-    sidebar_types()
     tab_anon, tab_restore = st.tabs(["Обезличивание", "Восстановление"])
     with tab_anon:
         page_anonymize()

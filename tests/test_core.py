@@ -49,6 +49,18 @@ def test_helpers():
     assert date_keys == {"2024-03-15"}
     assert all(e.tag == "" for e in dates)
 
+    city_addrs = detect_structured(
+        "Арбитражный суд города Москвы рассмотрел дело. "
+        "Адрес филиала: г. Москвы. Второй адрес: г Москва. "
+        "Третий адрес указан в городе Москве. Четвертый: гор. Москвы."
+    )
+    addr_texts = {e.text for e in city_addrs if e.type == "ADDR"}
+    assert "города Москвы" in addr_texts
+    assert "г. Москвы" in addr_texts
+    assert "г Москва" in addr_texts
+    assert "городе Москве" in addr_texts
+    assert "гор. Москвы" in addr_texts
+
     a = [Entity("FIO", 0, 21, "Иванов Иван Петрович", "иванов|и")]
     b = [Entity("FIO", 0, 6, "Иванов", "иванов")]
     registry = TagRegistry()

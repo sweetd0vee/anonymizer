@@ -36,57 +36,22 @@ header[data-testid="stHeader"] {
   display: none !important;
 }
 
-/* Сайдбар — без пустой полосы сверху под скрытую шапку */
+/* Сайдбар не используется */
 section[data-testid="stSidebar"] {
-  background: #003366 !important; /* как на референсе */
-  color: #fff !important;
-  border-right: 1px solid var(--sokol-steel) !important;
-  top: 0 !important;
-  /* Фиксируем ширину сайдбара: не даём растягивать/сжимать */
-  width: 235px !important;
-  min-width: 235px !important;
-  max-width: 235px !important;
-  flex: 0 0 235px !important;
-  /* Не даём сайдбару скроллиться */
-  height: 100vh !important;
-  overflow: hidden !important;
+  display: none !important;
 }
 
 [data-testid="stSidebarHeader"] {
   display: none !important;
-  height: 0 !important;
-  min-height: 0 !important;
-  padding: 0 !important;
 }
 
 section[data-testid="stSidebar"] > div:first-child,
 [data-testid="stSidebarContent"] {
-  padding-top: var(--layout-top) !important;
-}
-
-[data-testid="stSidebarContent"] {
-  /* Ключевое: отключаем вертикальный скролл сайдбара */
-  overflow: hidden !important;
-  overflow-y: hidden !important;
-  height: calc(100vh - var(--layout-top)) !important;
-  padding-left: 1rem !important;
-  padding-right: 0.75rem !important;
-}
-
-/* Текст внутри тёмно-синего сайдбара делаем контрастным */
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h3,
-section[data-testid="stSidebar"] .stCaption,
-section[data-testid="stSidebar"] .stSubheader,
-section[data-testid="stSidebar"] [data-testid="stSubheader"],
-section[data-testid="stSidebar"] [data-baseweb="accordion"] *,
-section[data-testid="stSidebar"] label {
-  color: #fff !important;
+  display: none !important;
 }
 
 [data-testid="stSidebarCollapseButton"] {
-  margin-top: 0 !important;
+  display: none !important;
 }
 
 /* Белая карточка контента — тот же отступ сверху, что у сайдбара */
@@ -113,18 +78,6 @@ section[data-testid="stSidebar"] label {
 [data-testid="stHeading"] h2,
 [data-testid="stHeading"] h3 {
   color: var(--sokol-navy) !important;
-  font-weight: 700 !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  line-height: 1.35 !important;
-  scroll-margin-top: 0 !important;
-}
-
-/* Заголовки сайдбара — белые */
-section[data-testid="stSidebar"] h1,
-section[data-testid="stSidebar"] h2,
-section[data-testid="stSidebar"] h3 {
-  color: #fff !important;
   font-weight: 700 !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -274,63 +227,18 @@ footer {
   visibility: hidden;
 }
 
-/* Force sidebar text to white */
-section[data-testid="stSidebar"] {
-  color: #fff !important;
-}
-section[data-testid="stSidebar"] .stCaption,
-section[data-testid="stSidebar"] [data-testid="stCaptionContainer"],
-section[data-testid="stSidebar"] .stSubheader,
-section[data-testid="stSidebar"] [data-testid="stSubheader"] {
-  color: #fff !important;
-}
-
-/* Checkbox labels inside sidebar */
-section[data-testid="stSidebar"] [data-testid="stCheckbox"] *,
-section[data-testid="stSidebar"] [data-testid="stCheckbox"] label {
-  color: #fff !important;
-}
-
-/* Чекбоксы — компактный список */
-section[data-testid="stSidebar"] [data-testid="stCheckbox"] {
-  margin-bottom: -0.35rem !important;
-}
-
-section[data-testid="stSidebar"] [data-testid="stCheckbox"] label {
-  font-size: 0.8125rem !important;
-  font-weight: 400 !important;
-  line-height: 1.3 !important;
-}
-
-section[data-testid="stSidebar"] [data-testid="stCheckbox"] label p {
-  font-size: 0.8125rem !important;
-  margin: 0 !important;
-}
-
-section[data-testid="stSidebar"] hr {
-  display: none !important;
-}
-
 /* Легенда подсветки */
-section[data-testid="stSidebar"] .sidebar-legend-title {
-  color: rgba(255, 255, 255, 0.75) !important;
-  font-size: 0.75rem !important;
-  font-weight: 600 !important;
-  line-height: 1.3 !important;
-  margin: 0 0 0.5rem 0 !important;
-  padding: 0 !important;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-}
-
-section[data-testid="stSidebar"] .sidebar-legend-tags {
+.sidebar-legend-tags {
   display: flex;
   flex-wrap: wrap;
   gap: 4px 5px;
   line-height: 1.2;
+  padding: 6px 0 10px !important;
+  min-height: 42px;
+  align-items: flex-start;
 }
 
-section[data-testid="stSidebar"] .sidebar-legend-tag {
+.sidebar-legend-tag {
   color: #003366 !important;
   padding: 2px 7px !important;
   border-radius: 4px !important;

@@ -80,6 +80,12 @@ RX_ADDR = re.compile(
     re.UNICODE,
 )
 
+# Короткие адресные формы без улицы/дома: «г Москва», «гор. Москвы», «городе Москве».
+RX_CITY_ADDR = re.compile(
+    r"\b(?:г|гор|город|города|городе)\.?\s+[А-ЯЁ][А-ЯЁа-яё\-]+(?:\s+[А-ЯЁ][А-ЯЁа-яё\-]+){0,2}\b",
+    re.UNICODE,
+)
+
 # судебные дела не обезличиваем; зона нужна, чтобы номер не приняли за телефон/счёт
 RX_CASE = re.compile(r"(?:№\s*)?[АA]\d{1,3}-\d{1,7}/\d{2,4}(?:[-\w/]*)?")
 
@@ -195,6 +201,10 @@ def detect_structured(text: str) -> list[Entity]:
     for m in RX_PASSPORT.finditer(text):
         if _ctx_before(text, m.start(), PASSPORT_CTX, 60):
             add("PASSPORT", m.start(), m.end(), m.group(0))
+
+    for m in RX_CITY_ADDR.finditer(text):
+        add("ADDR", m.start(), m.end(), m.group(0).strip().rstrip(","),
+            key=re.sub(r"[\s.,]+", "", m.group(0)).lower())
 
     for m in RX_ADDR.finditer(text):
         add("ADDR", m.start(), m.end(), m.group(0).strip().rstrip(","),
