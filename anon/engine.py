@@ -120,25 +120,7 @@ def anonymize_document(loaded: LoadedDoc, entities: list[Entity]):
         for idx, repls in per_unit.items():
             _replace_in_paragraph(fragments.units[idx], repls)
         return loaded.source
-    if loaded.kind in ("xlsx", "pptx"):
-        per_unit = _distribute_replacements(fragments.texts, fragments.offsets, entities)
-        for idx, repls in per_unit.items():
-            _apply_unit(fragments.units[idx], fragments.texts[idx], repls)
-        return loaded.source
     raise ValueError(f"Нет структурированной замены для {loaded.kind}")
-
-
-def _apply_unit(unit, original: str, replacements: list[tuple[int, int, str]]) -> None:
-    if callable(unit):
-        unit(_replace_plain(original, replacements))
-        return
-    kind, obj = unit
-    if kind == "para" and getattr(obj, "runs", ()):
-        _replace_in_paragraph(obj, replacements)
-    elif kind == "para":
-        obj.text = _replace_plain(original, replacements)
-    else:
-        obj(_replace_plain(original, replacements))
 
 
 def _replace_in_paragraph(paragraph, replacements: list[tuple[int, int, str]]):

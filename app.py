@@ -33,14 +33,14 @@ COLORS = {
 
 MIME = {
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-    ".xlsx": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-    ".pptx": "application/vnd.openxmlformats-officedocument.presentationml.presentation",
     ".pdf": "application/pdf",
     ".md": "text/markdown",
     ".txt": "text/plain",
     ".json": "application/json",
     ".zip": "application/zip",
 }
+
+AVAILABLE_TYPES = {code for code, _ in SETTING_TYPES}
 
 
 @dataclass
@@ -68,7 +68,7 @@ def init_state():
         st.session_state.registry = TagRegistry()
     if "enabled_types" not in st.session_state:
         saved = config.load_settings().get("enabled_types")
-        types = (set(saved) & set(ENTITY_TYPES)) if saved else set(ENTITY_TYPES)
+        types = (set(saved) & AVAILABLE_TYPES) if saved else set(AVAILABLE_TYPES)
         st.session_state.enabled_types = types | {"OTHER"}
 
 
@@ -90,7 +90,10 @@ def analyze_uploads(uploads) -> tuple[list[FileState], TagRegistry]:
             loaded = readers.load_from_bytes(name, fs.raw)
             fs.text = loaded.text
             fs.warnings = loaded.warnings
-            fs.entities = analyzer.detect(loaded.text)
+            fs.entities = [
+                e for e in analyzer.detect(loaded.text)
+                if e.type in AVAILABLE_TYPES
+            ]
         except Exception as exc:
             fs.error = str(exc)
         files.append(fs)
@@ -213,7 +216,6 @@ def mime_for(name: str) -> str:
 
 
 def sidebar_types():
-    st.sidebar.subheader("Что заменять")
     labels = [label for _, label in SETTING_TYPES]
     by_label = {label: code for code, label in SETTING_TYPES}
     by_code = {code: label for code, label in SETTING_TYPES}
@@ -224,14 +226,20 @@ def sidebar_types():
             if code in st.session_state.enabled_types
         ]
 
-    selected = st.sidebar.multiselect(
-        "Категории для замены",
-        options=labels,
-        key="replace_types",
-        placeholder="Выберите категории",
-        label_visibility="collapsed",
+    # UI без выпадающего списка: отмечаем категории галочками.
+    selected_codes: set[str] = set()
+    st.sidebar.markdown(
+        "<h1 style='color:#fff; margin:0 0 28px 0;'>Категории для<br>замены</h1>",
+        unsafe_allow_html=True,
     )
-    new_types = {"OTHER"} | {by_label[label] for label in selected}
+    for code, label in SETTING_TYPES:
+        if st.sidebar.checkbox(
+            label,
+            value=code in st.session_state.enabled_types,
+            key=f"replace_checkbox_{code}",
+        ):
+            selected_codes.add(code)
+    new_types = {"OTHER"} | selected_codes
 
     if new_types != st.session_state.enabled_types:
         st.session_state.enabled_types = new_types
@@ -243,9 +251,13 @@ def sidebar_types():
 
 def sidebar_highlight_legend() -> None:
     """Список категорий подсветки — внизу сайдбара."""
-    st.sidebar.caption("Подсветка")
+    st.sidebar.markdown(
+        "<div style='color:#fff; font-size:0.875rem; margin-bottom:0.35rem;'>Подсветка</div>",
+        unsafe_allow_html=True,
+    )
     legend = " ".join(
-        f'<span style="background:{COLORS[c]};padding:2px 6px;border-radius:4px;'
+        f'<span style="background:{COLORS[c]};color:#003366;padding:2px 6px;'
+        f'border-radius:4px;'
         f'margin:0 4px 4px 0;display:inline-block;font-size:12px">{html.escape(l)}</span>'
         for c, l in SETTING_TYPES
     )
@@ -257,8 +269,8 @@ def page_anonymize():
         "Загрузите документы, проверьте подсветку и скачайте обезличенные файлы."
     )
     uploads = st.file_uploader(
-        "Документы (docx, xlsx, pptx, pdf, txt, md). Несколько файлов — общая таблица тегов.",
-        type=["docx", "xlsx", "pptx", "pdf", "txt", "md"],
+        "Документы (docx, pdf, txt, md). Несколько файлов — общая таблица тегов.",
+        type=["docx", "pdf", "txt", "md"],
         accept_multiple_files=True,
     )
     if st.button("Обработать", type="primary", disabled=not uploads):
@@ -309,7 +321,6 @@ def page_anonymize():
         st.session_state.editor_rev += 1
 
     # Превью с подсветкой (и выбором фрагмента) переносим в сайдбар
-    st.sidebar.caption("Текст документа — выделите фрагмент")
     if current.error:
         st.sidebar.error(current.error)
         selected = ""
@@ -358,15 +369,15 @@ def page_anonymize():
                 set_tag_enabled(tag, want)
 
     st.markdown("**Пропущенное**")
-    fragment = st.text_input(
+    labels = [label for _, label in MANUAL_TYPES]
+    m1, m2, m3 = st.columns((3, 1.4, 1))
+    fragment = m1.text_input(
         "Фрагмент из текста",
         placeholder="Выделите в документе или вставьте сюда",
         key="manual_fragment",
     )
-    labels = [label for _, label in MANUAL_TYPES]
-    m1, m2 = st.columns((2, 1))
-    chosen = m1.selectbox("Тип", labels, index=0)
-    if m2.button("Добавить", width="stretch"):
+    chosen = m2.selectbox("Тип", labels, index=0)
+    if m3.button("Добавить", width="stretch"):
         etype = MANUAL_TYPES[labels.index(chosen)][0]
         n, reason = add_manual(fragment, etype)
         if n:
@@ -481,9 +492,19 @@ def inject_theme():
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 
+def load_page_icon():
+    icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "sberbank.png"))
+    if not os.path.exists(icon_path):
+        return "📄"
+    try:
+        from PIL import Image
+        return Image.open(icon_path)
+    except Exception:
+        return icon_path
+
+
 def main():
-    icon_path = os.path.join(os.path.dirname(__file__), "sberbank.png")
-    page_icon = icon_path if os.path.exists(icon_path) else "📄"
+    page_icon = load_page_icon()
     st.set_page_config(page_title=APP_TITLE, layout="wide", page_icon=page_icon)
     inject_theme()
     st.title(APP_TITLE)

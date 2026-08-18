@@ -37,7 +37,6 @@ SETTING_TYPES = [
     ("PASSPORT", "Паспорта"),
     ("ACCOUNT", "Счета"),
     ("BIK", "БИК"),
-    ("KPP", "КПП"),
     ("PHONE", "Телефоны"),
     ("EMAIL", "Email"),
 ]

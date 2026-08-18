@@ -7,6 +7,7 @@
   --sokol-steel-hover: #5C7A92;
   --sokol-page: #FFFFFF;
   --sokol-card: #FFFFFF;
+  --sokol-sidebar: #EAF3FF;
   --sokol-line: #E2E6EA;
   --sokol-muted: #5A6570;
   --sokol-text: #1B2430;
@@ -32,9 +33,18 @@ header[data-testid="stHeader"] {
 
 /* Сайдбар — без пустой полосы сверху под скрытую шапку */
 section[data-testid="stSidebar"] {
-  background: var(--sokol-page) !important;
-  border-right: 1px solid var(--sokol-line);
+  background: #003366 !important; /* как на референсе */
+  color: #fff !important;
+  border-right: 1px solid var(--sokol-steel) !important;
   top: 0 !important;
+  /* Фиксируем ширину сайдбара: не даём растягивать/сжимать */
+  width: 235px !important;
+  min-width: 235px !important;
+  max-width: 235px !important;
+  flex: 0 0 235px !important;
+  /* Не даём сайдбару скроллиться */
+  height: 100vh !important;
+  overflow: hidden !important;
 }
 
 [data-testid="stSidebarHeader"] {
@@ -47,6 +57,25 @@ section[data-testid="stSidebar"] {
 section[data-testid="stSidebar"] > div:first-child,
 [data-testid="stSidebarContent"] {
   padding-top: 1.25rem !important;
+}
+
+[data-testid="stSidebarContent"] {
+  /* Ключевое: отключаем вертикальный скролл сайдбара */
+  overflow: hidden !important;
+  overflow-y: hidden !important;
+  height: calc(100vh - 1.25rem) !important;
+}
+
+/* Текст внутри тёмно-синего сайдбара делаем контрастным */
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3,
+section[data-testid="stSidebar"] .stCaption,
+section[data-testid="stSidebar"] .stSubheader,
+section[data-testid="stSidebar"] [data-testid="stSubheader"],
+section[data-testid="stSidebar"] [data-baseweb="accordion"] *,
+section[data-testid="stSidebar"] label {
+  color: #fff !important;
 }
 
 [data-testid="stSidebarCollapseButton"] {
@@ -71,16 +100,24 @@ section[data-testid="stSidebar"] > div:first-child,
   margin-top: 0 !important;
 }
 
-/* Заголовки страницы и сайдбара — синие, одна линия */
+/* Заголовок страницы — темно-синий */
 [data-testid="stHeading"],
 [data-testid="stHeading"] h1,
 [data-testid="stHeading"] h2,
-[data-testid="stHeading"] h3,
-h1, h2, h3,
+[data-testid="stHeading"] h3 {
+  color: var(--sokol-navy) !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.35 !important;
+  scroll-margin-top: 0 !important;
+}
+
+/* Заголовки сайдбара — белые */
 section[data-testid="stSidebar"] h1,
 section[data-testid="stSidebar"] h2,
 section[data-testid="stSidebar"] h3 {
-  color: var(--sokol-navy) !important;
+  color: #fff !important;
   font-weight: 700 !important;
   margin: 0 !important;
   padding: 0 !important;
@@ -206,4 +243,21 @@ hr {
 
 footer {
   visibility: hidden;
+}
+
+/* Force sidebar text to white */
+section[data-testid="stSidebar"] {
+  color: #fff !important;
+}
+section[data-testid="stSidebar"] .stCaption,
+section[data-testid="stSidebar"] [data-testid="stCaptionContainer"],
+section[data-testid="stSidebar"] .stSubheader,
+section[data-testid="stSidebar"] [data-testid="stSubheader"] {
+  color: #fff !important;
+}
+
+/* Checkbox labels inside sidebar */
+section[data-testid="stSidebar"] [data-testid="stCheckbox"] *,
+section[data-testid="stSidebar"] [data-testid="stCheckbox"] label {
+  color: #fff !important;
 }
