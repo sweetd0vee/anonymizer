@@ -1,0 +1,7 @@
+natasha
+openpyxl
+python-docx
+python-pptx
+pymupdf
+setuptools<81  # pymorphy2 требует pkg_resources, удалён в setuptools 81+
+streamlit

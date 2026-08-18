@@ -1,0 +1,209 @@
+/* SOKOL — корпоративная тема анонимизатора */
+
+:root {
+  --sokol-navy: #0A365F;
+  --sokol-navy-hover: #0C4273;
+  --sokol-steel: #6D8BA3;
+  --sokol-steel-hover: #5C7A92;
+  --sokol-page: #FFFFFF;
+  --sokol-card: #FFFFFF;
+  --sokol-line: #E2E6EA;
+  --sokol-muted: #5A6570;
+  --sokol-text: #1B2430;
+  --sokol-tab-idle: #E8ECF0;
+}
+
+html, body, .stApp, [data-testid="stAppViewContainer"], [data-testid="stMain"] {
+  background: var(--sokol-page) !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Убрать красную полоску Streamlit и кнопку Deploy */
+div[data-testid="stDecoration"],
+.stDeployButton,
+div[data-testid="stToolbar"] {
+  display: none !important;
+}
+
+header[data-testid="stHeader"] {
+  display: none !important;
+}
+
+/* Сайдбар — без пустой полосы сверху под скрытую шапку */
+section[data-testid="stSidebar"] {
+  background: var(--sokol-page) !important;
+  border-right: 1px solid var(--sokol-line);
+  top: 0 !important;
+}
+
+[data-testid="stSidebarHeader"] {
+  display: none !important;
+  height: 0 !important;
+  min-height: 0 !important;
+  padding: 0 !important;
+}
+
+section[data-testid="stSidebar"] > div:first-child,
+[data-testid="stSidebarContent"] {
+  padding-top: 1.25rem !important;
+}
+
+[data-testid="stSidebarCollapseButton"] {
+  margin-top: 0 !important;
+}
+
+/* Белая карточка контента — тот же отступ сверху, что у сайдбара */
+.stMainBlockContainer,
+[data-testid="stMainBlockContainer"],
+.block-container {
+  background: var(--sokol-card);
+  border: 1px solid var(--sokol-line);
+  border-radius: 10px;
+  padding: 1.25rem 36px 40px !important;
+  margin-top: 0 !important;
+  min-height: 100vh;
+  box-shadow: none;
+}
+
+[data-testid="stMain"] {
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}
+
+/* Заголовки страницы и сайдбара — синие, одна линия */
+[data-testid="stHeading"],
+[data-testid="stHeading"] h1,
+[data-testid="stHeading"] h2,
+[data-testid="stHeading"] h3,
+h1, h2, h3,
+section[data-testid="stSidebar"] h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3 {
+  color: var(--sokol-navy) !important;
+  font-weight: 700 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.35 !important;
+  scroll-margin-top: 0 !important;
+}
+
+[data-testid="stHeading"] h1,
+h1,
+section[data-testid="stSidebar"] h2,
+section[data-testid="stSidebar"] h3 {
+  font-size: 1.5rem !important;
+}
+
+.stCaption, [data-testid="stCaptionContainer"] {
+  color: var(--sokol-muted) !important;
+}
+
+/* Вкладки как сегменты: активная — navy, остальные — серые */
+div[data-testid="stTabs"] [data-baseweb="tab-list"] {
+  gap: 8px;
+  background: transparent !important;
+  border-bottom: none !important;
+  padding-bottom: 4px;
+}
+
+div[data-testid="stTabs"] [data-baseweb="tab-highlight"],
+div[data-testid="stTabs"] [data-baseweb="tab-border"] {
+  display: none !important;
+}
+
+div[data-testid="stTabs"] button[data-baseweb="tab"] {
+  background: var(--sokol-tab-idle) !important;
+  color: var(--sokol-text) !important;
+  border-radius: 6px !important;
+  padding: 8px 18px !important;
+  font-weight: 600 !important;
+  border: none !important;
+}
+
+div[data-testid="stTabs"] button[data-baseweb="tab"][aria-selected="true"] {
+  background: var(--sokol-navy) !important;
+  color: #fff !important;
+}
+
+/* Кнопки: вторичные — контур, primary — стальной синий (не красный) */
+.stButton > button,
+.stDownloadButton > button,
+[data-testid="stBaseButton-secondary"],
+[data-testid="baseButton-secondary"] {
+  background: #fff !important;
+  color: var(--sokol-text) !important;
+  border: 1px solid #D0D5DB !important;
+  border-radius: 6px !important;
+  font-weight: 600 !important;
+}
+
+.stButton > button:hover,
+.stDownloadButton > button:hover {
+  border-color: var(--sokol-steel) !important;
+  color: var(--sokol-navy) !important;
+}
+
+.stButton > button[kind="primary"],
+.stDownloadButton > button[kind="primary"],
+[data-testid="stBaseButton-primary"],
+[data-testid="baseButton-primary"] {
+  background: var(--sokol-steel) !important;
+  color: #fff !important;
+  border: 1px solid var(--sokol-steel) !important;
+}
+
+.stButton > button[kind="primary"]:hover,
+.stDownloadButton > button[kind="primary"]:hover,
+[data-testid="stBaseButton-primary"]:hover,
+[data-testid="baseButton-primary"]:hover {
+  background: var(--sokol-steel-hover) !important;
+  border-color: var(--sokol-steel-hover) !important;
+  color: #fff !important;
+}
+
+.stButton > button:disabled,
+.stDownloadButton > button:disabled {
+  opacity: 0.55;
+}
+
+/* Зона загрузки файла */
+[data-testid="stFileUploaderDropzone"] {
+  background: #F3F5F7 !important;
+  border: 1px solid var(--sokol-line) !important;
+  border-radius: 8px !important;
+  padding: 12px 16px !important;
+}
+
+[data-testid="stFileUploaderDropzone"] button {
+  background: #fff !important;
+  color: var(--sokol-text) !important;
+  border: 1px solid #D0D5DB !important;
+  border-radius: 6px !important;
+}
+
+/* Чекбоксы, радио, слайдеры — синий акцент вместо красного */
+[data-testid="stCheckbox"] input:checked + div svg,
+[data-testid="stCheckbox"] [data-checked="true"] {
+  fill: var(--sokol-navy);
+}
+
+/* Метрики без красного акцента */
+[data-testid="stMetricValue"] {
+  color: var(--sokol-navy) !important;
+}
+
+/* Превью документа */
+iframe[title="anon_preview"] {
+  border: 1px solid var(--sokol-line) !important;
+  border-radius: 8px;
+  background: #fff;
+}
+
+hr {
+  border-color: var(--sokol-line) !important;
+}
+
+footer {
+  visibility: hidden;
+}

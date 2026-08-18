@@ -1,2 +1,29 @@
 # anonymizer
-DOCX/PDF/TXT anonymizer (remove names, phones, mails etc.)
+
+DOCX/XLSX/PPTX/PDF/TXT анонимизатор документов: находит персональные данные и заменяет их на теги, с возможностью обратного восстановления по таблице соответствий.
+
+## Как запустить локально
+
+1. Установите зависимости:
+```powershell
+python -m pip install -r requirements.txt
+```
+
+2. Запустите Streamlit:
+```powershell
+python -m streamlit run app.py
+```
+
+## Тесты
+
+```powershell
+python -m pip install pytest
+pytest -q
+```
+
+Примечание: `tests/test_core.py` содержит быстрые проверки, которые запускаются через `pytest`. Полный “энд-ту-энд” сценарий (docx/xlsx/pptx round-trip) реализован как запуск `python tests/test_core.py` (как скрипт), если нужно дополнительно прогонять всё.
+
+## Формат выходных данных
+
+- Обезличенные файлы: `*.anon.*` (получаются при экспорте в приложении)
+- Таблица соответствий: JSON (`_mapping.json` или аналог) — содержит исходные персональные данные, не отправляйте её в облачные LLM.

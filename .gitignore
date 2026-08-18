@@ -216,3 +216,18 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Streamlit local config (не коммитим)
+.streamlit/config.toml
+.streamlit/credentials.toml
+.streamlit/*.toml
+
+# Test fixtures / generated artifacts
+tests/*.anon.*
+tests/*.restored.*
+tests/scan.pdf
+
+# Frontend (if you build it locally)
+frontend/node_modules/
+frontend/dist/
+frontend/build/
