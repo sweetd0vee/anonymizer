@@ -18,7 +18,9 @@ def inject_theme() -> None:
 
 
 def load_page_icon():
-    icon_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "sberbank.png"))
+    icon_path = os.path.abspath(
+        os.path.join(os.path.dirname(__file__), "img", "sberbank.png")
+    )
     if not os.path.exists(icon_path):
         return "📄"
     try:

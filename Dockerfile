@@ -25,6 +25,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY --chown=appuser:appuser anon/ anon/
 COPY --chown=appuser:appuser ui/ ui/
 COPY --chown=appuser:appuser frontend/ frontend/
+COPY --chown=appuser:appuser img/ img/
 COPY --chown=appuser:appuser app.py .
 
 USER appuser

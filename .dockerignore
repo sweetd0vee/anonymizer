@@ -12,7 +12,6 @@ venv
 **/*.egg-info
 tests
 vendor
-img
 *.md
 LICENSE
 frontend/node_modules
