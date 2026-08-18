@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-"""Чтение документов: txt/md, docx, pdf (+OCR для сканов)."""
+"""Чтение документов: txt, docx, pdf (+OCR для сканов)."""
 from __future__ import annotations
 
 import os
@@ -7,7 +7,7 @@ import shutil
 import subprocess
 import tempfile
 from dataclasses import dataclass, field
-SUPPORTED_EXT = {".txt", ".md", ".docx", ".pdf"}
+SUPPORTED_EXT = {".txt", ".docx", ".pdf"}
 STRUCTURED_KINDS = frozenset({"docx"})
 
 TESSERACT_CANDIDATES = (
@@ -73,7 +73,7 @@ class LoadedDoc:
 
 def load(path: str) -> LoadedDoc:
     ext = os.path.splitext(path)[1].lower()
-    if ext in (".txt", ".md"):
+    if ext == ".txt":
         return _load_text(path)
     if ext == ".docx":
         return _load_docx(path)
@@ -87,6 +87,8 @@ def load_from_bytes(name: str, data: bytes) -> LoadedDoc:
     ext = os.path.splitext(name)[1].lower()
     if ext not in SUPPORTED_EXT:
         raise ValueError(f"Неподдерживаемый формат: {ext or 'без расширения'}")
+    if ext == ".docx":
+        _validate_docx_bytes(data)
     with tempfile.TemporaryDirectory() as td:
         path = os.path.join(td, os.path.basename(name) or f"document{ext}")
         with open(path, "wb") as f:
@@ -94,6 +96,20 @@ def load_from_bytes(name: str, data: bytes) -> LoadedDoc:
         loaded = load(path)
         loaded.path = name
         return loaded
+
+
+def _validate_docx_bytes(data: bytes) -> None:
+    """Проверка, что файл — настоящий .docx, а не старый .doc под чужим именем."""
+    if not data:
+        raise ValueError("Файл пустой")
+    if data.startswith(b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"):
+        raise ValueError(
+            "Это старый формат Word (.doc). Откройте файл в Word и сохраните как .docx."
+        )
+    if not data.startswith(b"PK"):
+        raise ValueError(
+            "Файл не похож на документ Word (.docx). Проверьте формат или пересохраните в Word."
+        )
 
 
 def _load_text(path: str) -> LoadedDoc:

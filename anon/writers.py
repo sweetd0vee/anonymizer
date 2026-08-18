@@ -11,17 +11,16 @@ from .readers import STRUCTURED_KINDS, LoadedDoc
 
 
 def anon_output_path(src_path: str, out_dir: str | None = None) -> str:
-    """file.docx -> file.anon.docx; file.pdf -> file.anon.md (pdf не пересобираем)."""
+    """file.docx -> file_anon.docx; pdf/txt -> file_anon.docx."""
     folder, name = os.path.split(src_path)
-    base, ext = os.path.splitext(name)
-    ext = ".md" if ext.lower() == ".pdf" else ext.lower()
-    return os.path.join(out_dir or folder, f"{base}.anon{ext}")
+    base, _ = os.path.splitext(name)
+    return os.path.join(out_dir or folder, f"{base}_anon.docx")
 
 
 def restored_output_path(src_path: str) -> str:
     folder, name = os.path.split(src_path)
-    base, ext = os.path.splitext(name)
-    return os.path.join(folder, f"{base.replace('.anon', '')}.restored{ext}")
+    base, _ = os.path.splitext(name)
+    return os.path.join(folder, f"{base.replace('_anon', '').replace('.anon', '')}_restored.docx")
 
 
 def anonymized_bytes(loaded: LoadedDoc, entities: list[Entity], out_path: str) -> bytes:
@@ -30,7 +29,8 @@ def anonymized_bytes(loaded: LoadedDoc, entities: list[Entity], out_path: str) -
         buf = io.BytesIO()
         engine.anonymize_document(loaded, entities).save(buf)
         return buf.getvalue()
-    return engine.anonymize_text(loaded.text, entities).encode("utf-8")
+    text = engine.anonymize_text(loaded.text, entities)
+    return text_bytes(text, out_path)
 
 
 def save_anonymized(loaded: LoadedDoc, entities: list[Entity], out_path: str) -> None:

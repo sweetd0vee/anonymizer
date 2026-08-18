@@ -223,8 +223,8 @@ __marimo__/
 .streamlit/*.toml
 
 # Test fixtures / generated artifacts
-tests/*.anon.*
-tests/*.restored.*
+tests/*_anon.docx
+tests/*_restored.docx
 tests/scan.pdf
 
 # Frontend (if you build it locally)

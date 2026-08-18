@@ -144,7 +144,7 @@ def main():
     ents = analyzer.detect(loaded.text)
     reg2 = TagRegistry()
     engine.apply_tags(ents, reg2)
-    out = os.path.join(os.path.dirname(__file__), "sample.anon.docx")
+    out = os.path.join(os.path.dirname(__file__), "sample_anon.docx")
     writers.save_anonymized(loaded, ents, out)
 
     check = readers.load(out)
@@ -167,7 +167,7 @@ def main():
     ents_s = analyzer.detect(loaded_s.text)
     assert any(e.type == "ADDR" for e in ents_s), "адрес на стыке абзацев не найден"
     engine.apply_tags(ents_s, TagRegistry())
-    out_s = os.path.join(os.path.dirname(__file__), "sample_split.anon.docx")
+    out_s = os.path.join(os.path.dirname(__file__), "sample_split_anon.docx")
     writers.save_anonymized(loaded_s, ents_s, out_s)
     check_s = readers.load(out_s)
     assert "Ленина" not in check_s.text

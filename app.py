@@ -34,7 +34,6 @@ COLORS = {
 MIME = {
     ".docx": "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     ".pdf": "application/pdf",
-    ".md": "text/markdown",
     ".txt": "text/plain",
     ".json": "application/json",
     ".zip": "application/zip",
@@ -228,10 +227,6 @@ def sidebar_types():
 
     # UI без выпадающего списка: отмечаем категории галочками.
     selected_codes: set[str] = set()
-    st.sidebar.markdown(
-        "<h1 style='color:#fff; margin:0 0 28px 0;'>Категории для<br>замены</h1>",
-        unsafe_allow_html=True,
-    )
     for code, label in SETTING_TYPES:
         if st.sidebar.checkbox(
             label,
@@ -246,22 +241,23 @@ def sidebar_types():
         config.save_settings({"enabled_types": sorted(new_types)})
         apply_enabled_types()
         st.session_state.editor_rev += 1
-    st.sidebar.markdown("---")
 
 
 def sidebar_highlight_legend() -> None:
     """Список категорий подсветки — внизу сайдбара."""
     st.sidebar.markdown(
-        "<div style='color:#fff; font-size:0.875rem; margin-bottom:0.35rem;'>Подсветка</div>",
+        '<p class="sidebar-legend-title">Подсветка</p>',
         unsafe_allow_html=True,
     )
-    legend = " ".join(
-        f'<span style="background:{COLORS[c]};color:#003366;padding:2px 6px;'
-        f'border-radius:4px;'
-        f'margin:0 4px 4px 0;display:inline-block;font-size:12px">{html.escape(l)}</span>'
+    legend = "".join(
+        f'<span class="sidebar-legend-tag" style="background:{COLORS[c]};">'
+        f'{html.escape(l)}</span>'
         for c, l in SETTING_TYPES
     )
-    st.sidebar.markdown(legend, unsafe_allow_html=True)
+    st.sidebar.markdown(
+        f'<div class="sidebar-legend-tags">{legend}</div>',
+        unsafe_allow_html=True,
+    )
 
 
 def page_anonymize():
@@ -269,21 +265,24 @@ def page_anonymize():
         "Загрузите документы, проверьте подсветку и скачайте обезличенные файлы."
     )
     uploads = st.file_uploader(
-        "Документы (docx, pdf, txt, md). Несколько файлов — общая таблица тегов.",
-        type=["docx", "pdf", "txt", "md"],
+        "Документы (docx, pdf, txt). Несколько файлов — общая таблица тегов.",
+        type=["docx", "pdf", "txt"],
         accept_multiple_files=True,
+        key="anon_uploads",
     )
-    if st.button("Обработать", type="primary", disabled=not uploads):
-        with st.spinner("Анализ… первый запуск занимает около 10 секунд"):
-            files, registry = analyze_uploads(uploads)
-        st.session_state.files = files
-        st.session_state.registry = registry
-        st.session_state.editor_rev += 1
-        st.session_state.pop("current_file", None)
-        st.session_state.pop("shown_file", None)
-        st.session_state.pop("_last_preview_sel", None)
-        st.session_state.manual_fragment = ""
-        st.rerun()
+    btn_col, _ = st.columns(2)
+    with btn_col:
+        if st.button("Обработать", type="primary", disabled=not uploads):
+            with st.spinner("Анализ… первый запуск занимает около 10 секунд"):
+                files, registry = analyze_uploads(uploads)
+            st.session_state.files = files
+            st.session_state.registry = registry
+            st.session_state.editor_rev += 1
+            st.session_state.pop("current_file", None)
+            st.session_state.pop("shown_file", None)
+            st.session_state.pop("_last_preview_sel", None)
+            st.session_state.manual_fragment = ""
+            st.rerun()
 
     files: list[FileState] = st.session_state.files
     if not files:
@@ -442,8 +441,8 @@ def page_restore():
     )
     a1, a2 = st.columns(2)
     answer = a1.file_uploader(
-        "Ответ LLM (txt, md, docx)",
-        type=["txt", "md", "docx"],
+        "Ответ LLM (txt, docx)",
+        type=["txt", "docx"],
         key="restore_answer",
     )
     mapping_file = a2.file_uploader(
@@ -451,18 +450,25 @@ def page_restore():
         type=["json"],
         key="restore_mapping",
     )
-    if st.button("Восстановить", type="primary", disabled=not (answer and mapping_file)):
-        try:
-            mapping = load_mapping_bytes(mapping_file.getvalue())
-            loaded = readers.load_from_bytes(answer.name, answer.getvalue())
-        except Exception as exc:
-            st.error(f"Не удалось прочитать файлы: {exc}")
-            return
-        restored, leftover = engine.deanonymize_text(loaded.text, mapping)
-        st.session_state.restore_text = restored
-        st.session_state.restore_leftover = leftover
-        out_name = os.path.basename(writers.restored_output_path(answer.name))
-        st.session_state.restore_name = out_name
+    btn_col, _ = st.columns(2)
+    with btn_col:
+        if st.button(
+            "Восстановить",
+            type="primary",
+            disabled=not (answer and mapping_file),
+            width="stretch",
+        ):
+            try:
+                mapping = load_mapping_bytes(mapping_file.getvalue())
+                loaded = readers.load_from_bytes(answer.name, answer.getvalue())
+            except Exception as exc:
+                st.error(f"Не удалось прочитать файлы: {exc}")
+                return
+            restored, leftover = engine.deanonymize_text(loaded.text, mapping)
+            st.session_state.restore_text = restored
+            st.session_state.restore_leftover = leftover
+            out_name = os.path.basename(writers.restored_output_path(answer.name))
+            st.session_state.restore_name = out_name
 
     if not st.session_state.restore_text:
         st.info("Укажите оба файла и нажмите «Восстановить».")
