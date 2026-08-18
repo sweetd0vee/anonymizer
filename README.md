@@ -5,6 +5,7 @@
 В облачную LLM уходит только обезличенный текст; JSON-таблица с исходными значениями остаётся у вас.
 
 **Документация:** [пайплайн](docs/pipeline.md) · [алгоритм распознавания](docs/recognition.md) · [использование](docs/usage.md)
+https://drive.google.com/file/d/1VwPGKEOiYUn2lNsxKAsQTfSq0Vfpe3We/view?usp=sharing
 
 ## Возможности
 
