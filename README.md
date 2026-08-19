@@ -37,7 +37,7 @@ python -m streamlit run app.py
 docker compose up --build
 ```
 
-Интерфейс: http://127.0.0.1:8501. Tesseract уже в образе.
+Интерфейс: http://localhost:8501. Tesseract уже в образе.
 
 ## Tesseract OCR
 

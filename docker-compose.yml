@@ -5,7 +5,7 @@ services:
     container_name: anonymizer
     network_mode: bridge
     ports:
-      - "127.0.0.1:8501:8501"
+      - "8501:8501"
     restart: unless-stopped
     volumes:
       - anonymizer-data:/home/appuser/Anonymizer
